@@ -18,23 +18,23 @@ io.on('connection', socket=>{
     console.log(`connected to client socket ${socket.id}`);
     socket.emit('connection-id',socket.id);  
     
-    
-    socket.on('join-room',data=>{
-        if(socket.rooms>1){
-            let count=0;
-            for(let room in socket.rooms){
-                if(room!==socket.id){
-                    socket.leave(room);
-                    count++;
-                }
-            }
-            console.log(`lef ta total of ${count} rooms`);
-        }
-        const {roomID} = data;
-        socket.join(roomID);
-        console.log(`socket with ID ${socket.id} has joined the room ID ${roomID}`);
+    // --------------------------------------------------------------
+    socket.on('connect-to-sender',data=>{
+        const{to} = data;
+        socket.to(to).emit('wants-to-connect',{who:socket.id});
     })
-    
+    socket.on('outgoing-call',data=>{
+        const {fromOffer,to}=data;
+        console.log(`Generated Offer from ${socket.id} to ${to} and offer is ${fromOffer}`)
+        socket.to(to).emit('incoming-call',{from:socket.id,offer:fromOffer});
+    })
+
+    socket.on('call-accepted',data=>{
+        const {answer,to} = data;
+        console.log(`call has been accepted by ${socket.id} with answer ${answer} and sent to ${to}`);
+        socket.to(to).emit('incoming-answer',{from:socket.id,offer:answer});
+    });
+
     socket.on('disconnect',()=>{
         console.log(`disconnected from id ${socket.id}`);
     });

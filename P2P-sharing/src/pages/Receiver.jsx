@@ -2,12 +2,12 @@
 import React , {useEffect,useState,useRef} from 'react';
 import NavBar from './NavBar';
 import ReceiverForm from './ReceiverForm';
-export default function Receiver({joinRoom}){
+export default function Receiver({connectTO}){
 return(
     <div>
         <NavBar />
         <ReceiverForm
-        joinRoom={joinRoom}
+        connectTO={connectTO}
         />
     </div>
 )

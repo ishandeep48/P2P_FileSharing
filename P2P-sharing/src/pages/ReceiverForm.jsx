@@ -1,12 +1,12 @@
 import React,{useState,useRef,useEffect} from 'react';
 
-export default function ReceiverForm({joinRoom}){
+export default function ReceiverForm({connectTO}){
     const[conId,setConId]=useState('');
     const updateConId = (evt) =>{
         setConId(evt.target.value)
     }
-    const joinToRoom=()=>{ 
-        joinRoom(conId)
+    const connectToSender = () => {
+        connectTO(conId)
     }
     return(
         <div className="flex flex-col items-center justify-center mt-24">
@@ -19,7 +19,7 @@ export default function ReceiverForm({joinRoom}){
             />
             <button 
             className="w-40 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            onClick={joinToRoom}
+            onClick={connectToSender}
             >CONNECT</button>
         </div>
     )
