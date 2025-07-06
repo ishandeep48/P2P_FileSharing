@@ -1,11 +1,6 @@
-import {io} from 'socket.io-client';
 import React,{useEffect,useRef,useState} from 'react';
 import NavBar from './NavBar';
-
-const socket = io('http://localhost:5000');
-
 function Home(){
-    
     return(
         <div>
             <NavBar/>
@@ -15,9 +10,7 @@ function Home(){
                 rate will still be amazing if you have good connection. I made this as a fun side kinda project just 
                 to share files with my friends in my college hostel .......................      ( also i dont know what else to make ) 
                 I WANT INTERNSHIP 😭😭😭😭</h3>
-            
         </div>
     );
 }
-
 export default Home;

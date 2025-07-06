@@ -2,7 +2,6 @@ const express =  require('express');
 const {createServer}=require('http');
 const app = express();
 const server = createServer(app);
-const path = require('path');
 const cors = require('cors');
 const {Server} =require('socket.io');
 
@@ -10,7 +9,8 @@ app.use(cors());
 
 const io=new Server(server,{
     cors:{
-        origin:'*'
+        origin:'*',
+        methods:['GET','POST'],
     }
 });
 
@@ -34,7 +34,10 @@ io.on('connection', socket=>{
         console.log(`call has been accepted by ${socket.id} with answer ${answer} and sent to ${to}`);
         socket.to(to).emit('incoming-answer',{from:socket.id,offer:answer});
     });
-
+    socket.on('ice-candidate',data=>{
+        const{to,candidate}=data;
+        socket.to(to).emit('ice-candidate',{candidate});
+    });
     socket.on('disconnect',()=>{
         console.log(`disconnected from id ${socket.id}`);
     });
@@ -44,6 +47,6 @@ io.on('connection', socket=>{
 app.get('/',(req,res)=>{
     res.send("This is a test");
 })
-server.listen(5000,()=>{
+server.listen(5000,'0.0.0.0',()=>{
     console.log("The backend server is running at port 5000");
 })
