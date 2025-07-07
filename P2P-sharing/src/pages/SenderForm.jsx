@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-
-export default function SenderForm({ connectionId, generateNewId, isSocket, uploadFile, dataChOpen }) {
+import {QRCodeCanvas} from 'qrcode.react';
+ 
+export default function SenderForm({ connectionId, generateNewId, isSocket, uploadFile, dataChOpen ,transferCompletion,speed}) {
   const [file, setFile] = useState(null);
 
   const fileChange = (evt) => {
@@ -16,10 +17,15 @@ export default function SenderForm({ connectionId, generateNewId, isSocket, uplo
   return (
     <div className="flex flex-col items-center justify-center mt-16">
       {isSocket && (
+        <>
         <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
           Your Connection ID:{" "}
           <span className="text-blue-600">{connectionId}</span>
         </h1>
+        <div className="bg-white p-4 m-4">
+        <QRCodeCanvas value={connectionId} size={256}/>
+        </div>
+        </>
       )}
       <button
         className="mb-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition duration-200"
@@ -40,6 +46,12 @@ export default function SenderForm({ connectionId, generateNewId, isSocket, uplo
       >
         SEND FILE!!
       </button>
+      <div className="mt-2 mb-2">
+        Transfered {transferCompletion} %
+      </div>
+      <div className="mb-2">
+        Speed {speed} Mbps
+      </div>
     </div>
   );
 }

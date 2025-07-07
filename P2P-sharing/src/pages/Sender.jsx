@@ -1,7 +1,7 @@
 import SenderForm from './SenderForm';
 import NavBar from './NavBar';
 
-export default function Sender({connectionId,generateNewId,isSocket,uploadFile,dataChOpen}) {
+export default function Sender({connectionId,generateNewId,isSocket,uploadFile,dataChOpen,transferCompletion,speed}) {
     
     return(
 
@@ -13,6 +13,8 @@ export default function Sender({connectionId,generateNewId,isSocket,uploadFile,d
             isSocket={isSocket}
             uploadFile={uploadFile}
             dataChOpen={dataChOpen}
+            transferCompletion={transferCompletion}
+            speed={speed}
             />
             
         </div>

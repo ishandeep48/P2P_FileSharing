@@ -1,0 +1,5 @@
+server/node_modules
+node_modules
+P2P-sharing/node_modules
+P2P-sharing/cert.pem
+P2P-sharing/key.pem

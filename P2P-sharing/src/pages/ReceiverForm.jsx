@@ -1,9 +1,23 @@
 import React,{useState,useRef,useEffect} from 'react';
 import { data } from 'react-router-dom';
+import {Scanner} from '@yudiel/react-qr-scanner';
+// import QRHandler from './QRHandler';
 
-export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showApprove,setIsReadyToDownload}){
+export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showApprove,setIsReadyToDownload,transferCompletion}){
     const [count,setCount] = useState(0);
     const[conId,setConId]=useState('');
+    const [sender,setSender]=useState();
+    const[wantsQR,setWantsQR]=useState(false);
+    
+    const handleQRReqButton = () =>{
+        setWantsQR(!wantsQR);
+    }
+    const connectViaQR = (data)=>{
+        connectTO(data[0].rawValue);
+        setSender(data[0].rawValue);
+        console.log('data to via qr is ',data[0].rawValue);
+        setWantsQR(false);
+    }
     const updateConId = (evt) =>{
         setConId(evt.target.value)
     }
@@ -28,6 +42,22 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
     }
     return(
         <div className="flex flex-col items-center justify-center mt-24">
+            <button
+            onClick={handleQRReqButton}
+            >OPEN QR
+            </button>
+            <>
+            {wantsQR&&(
+            <Scanner
+            onScan={connectViaQR}
+            styles={{width: '30px'}}
+            />
+            )}
+            </>
+            {/* <button onClick={requestCamAccess}>
+                ACCESS CAMERA
+            </button> */}
+            {sender &&  <p>The sender is {sender}</p>}
             <input
                 type="text"
                 value={conId}
@@ -58,8 +88,12 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
             > CLICK HERE TO DOWNLOAD THE RECEIVED FILE
             </button>
+            
             </div>
             )}
+            <div>
+                Received {transferCompletion} %
+            </div>
         </div>
     )
 }
