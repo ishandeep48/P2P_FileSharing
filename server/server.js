@@ -1,9 +1,16 @@
 const express =  require('express');
-const {createServer}=require('http');
+const {createServer}=require('https');
 const app = express();
-const server = createServer(app);
+const {readFileSync}=require('fs');
+
+const options ={
+    key:readFileSync('../P2P-sharing/key.pem'),
+    cert:readFileSync('../P2P-sharing/cert.pem')
+}
+const server = createServer(options,app);
 const cors = require('cors');
 const {Server} =require('socket.io');
+
 
 app.use(cors());
 

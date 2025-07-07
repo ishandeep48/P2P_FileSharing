@@ -2,7 +2,7 @@
 import React , {useEffect,useState,useRef} from 'react';
 import NavBar from './NavBar';
 import ReceiverForm from './ReceiverForm';
-export default function Receiver({connectTO,downloadURL,dataChOpen}){
+export default function Receiver({connectTO,downloadURL,dataChOpen,showApprove,setIsReadyToDownload}){
 return(
     <div>
         <NavBar />
@@ -10,6 +10,8 @@ return(
         connectTO={connectTO}
         downloadURL={downloadURL}
         dataChOpen={dataChOpen}
+        showApprove={showApprove}
+        setIsReadyToDownload={setIsReadyToDownload}
         />
     </div>
 )

@@ -8,12 +8,14 @@ import './App.css'
 import { useCallback } from 'react';
 // import { generateNewId } from './helper/utils';
 function App() {
-  const socketServerIP = 'http://192.168.29.134:5000'
+  const socketServerIP = 'wss://192.168.29.60:5000'
   const [connectionId,setConnectionId] = useState('');
   const [isSocket,setIsSocket] = useState(false);
   const [downloadURL,setDownloadURL] = useState(null);
   const [signalState,setSignalState] = useState(false);
   const [dataChOpen,setDataChOpen] = useState(false);
+  const [ isReadyToDownload,setIsReadyToDownload] = useState(false);
+  const [showApprove,setShowApprove]=useState(false);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef=useRef();
   const peerRef=useRef();
@@ -21,11 +23,18 @@ function App() {
   const receivedData = useRef([]);
   const remoteSocketID=useRef(null);
   const pendingCandidates=useRef([]);
+  const canSendData = useRef(false);
   const fileNameRef = useRef('received_file');
   const fileTypeRef = useRef('text/plain');
+  const metadataRef = useRef(null);
+  let fileHandle;
+  const writableStream=useRef(null);
   
   const dataChannelEvents = () =>{
-    dataChannel.current.onopen = () => console.log('opened data channel');
+    dataChannel.current.onopen = () => {
+      console.log('opened data channel');
+      setDataChOpen(true);
+    }
     peerRef.current.onicecandidate = event => {
       if (event.candidate) {
         if (remoteSocketID.current && signalState) {
@@ -38,7 +47,61 @@ function App() {
         }
       }
     };
+    // Inside dataChannelEvents():
+    dataChannel.current.onerror = (error) => {
+      setDataChOpen(false);
+      console.error('DataChannel error:', error);
+      // Implement retry logic here if needed
+    };
+
+    dataChannel.current.onbufferedamountlow = () => {
+      console.log('Buffer available - ready for more data');
+    };
   }
+  const senderDataChannelEvents = () =>{
+    dataChannel.current.bufferedAmountLowThreshold = 64*1024;
+    dataChannel.current.onmessage = async event =>{
+      if(typeof event.data == 'string' && event.data=='__EOF_ACK__'){
+        console.log('EOF ACK Received closing DataChannel');
+        dataChannel.current.close();
+      }
+      else if(typeof event.data == 'string'){
+        const parsedData = JSON.parse(event.data);
+        const {status} = parsedData;
+        console.log(`status is ${status}`);
+        console.log(parsedData);
+        if(status){
+          canSendData.current = true
+        } 
+      }
+    }
+  }
+  useEffect(()=>{
+    if(!isReadyToDownload) return;
+
+    const askForLocation = async () =>{
+      console.log('ask for location')
+      let ext = fileNameRef.current.split('.').pop();
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName : fileNameRef.current,
+        types: [
+          {
+            description : ' Received File',
+            accept : {[fileTypeRef.current]:['.'+ext]}
+          }
+        ]
+      })
+      writableStream.current = await fileHandle.createWritable();
+      console.log('gonna send report from receiver to sender');
+      const reportMessage = {
+                status : true
+      }
+      const sentData =  JSON.stringify(reportMessage);
+      dataChannel.current.send(sentData);
+      console.log('sent report to sender ',sentData);
+    }
+    askForLocation();
+  },[isReadyToDownload]);
   // let downloadURL;
   const registerSocketHandlers=()=>{
     // dataChannel.current = peerRef.current.createDataChannel('file-transfer');
@@ -51,51 +114,55 @@ function App() {
         console.log('data channel opened for transfer');
         console.log(dataChannel.current.readyState)
       };
-      dataChannel.current.onmessage = event => {
+      dataChannel.current.onmessage = async event => {
        
         if(!isMetaDataReceivedRef.current){
           if(typeof event.data == 'string'){
             try{
-              const metadata = JSON.parse(event.data);
-              fileNameRef.current = metadata.fileName || 'received_file';
-              fileTypeRef.current = metadata.fileType || 'text/plain';
+              metadataRef.current = JSON.parse(event.data);
+              fileNameRef.current = metadataRef.current.fileName || 'received_file';
+              fileTypeRef.current = metadataRef.current.fileType || 'text/plain';
               isMetaDataReceivedRef.current=true;
               console.log('metadata aaya');
+              setShowApprove(true);
+              
+              console.log('receiveing and sacving to ',fileNameRef.current);
             }catch(e){
-              console.error(e);
+              console.warn(e);
             }
           }
+        }else if(typeof event.data=='string' && event.data=='__EOF__'){
+          console.log('EOF Received,closing stream');
+          await writableStream.current.close();
+          dataChannel.current.send('__EOF_ACK__');
+          return;
         }else if(event.data){
           console.log('actual data aaya hua ')
-          receivedData.current.push(event.data);
+          
+          await writableStream.current.write(event.data);
         }else{
           console.warn('idk wtf has been received. ')
         }
       };
-      dataChannel.current.onclose = () => {
-        // console.log(receivedData.current);
-        console.log(`Total chunks received: ${receivedData.current.length}`);
-        let totalBytes = receivedData.current.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-        console.log(`Total received bytes: ${totalBytes}`);
-        const receivedBlob = new Blob(receivedData.current,{type:fileTypeRef.current});
-        console.log(`Blob size: ${receivedBlob.size}`);
-        const url = URL.createObjectURL(receivedBlob);
-        setDownloadURL({url,fileName:fileNameRef.current});
-        console.log('file received and ready to download');
+      dataChannel.current.onclose = async () => {
+        console.log('Data Channel is closed')
       };
 
     };
     socketRef.current.on('connection-id', (id) => {
       setConnectionId(id);
-      // setIsSocket(true);
     });
 
     socketRef.current.on('wants-to-connect',async (data)=>{
     const {who} = data;
     remoteSocketID.current = who;
     console.log(`receiver is ${who}`);
-    dataChannel.current = peerRef.current.createDataChannel('file-transfer');
+    dataChannel.current = peerRef.current.createDataChannel('file-transfer',{
+      ordered : true
+    });
     dataChannelEvents();
+    dataChannel.current.bufferedAmountLowThreshold = 128*1024;
+    senderDataChannelEvents();
     peerRef.current.onicecandidate = event =>{
       if(event.candidate){
         socketRef.current.emit('ice-candidate',{candidate:event.candidate,to:who});
@@ -170,7 +237,9 @@ function App() {
     
     socketRef.current = io(socketServerIP, {
       transports: ['websocket'],
-      upgrade: false
+      upgrade: false,
+      // rejectUnauthorized: false,
+      // secure : true
     });
     peerRef.current = new RTCPeerConnection(rtcConfig);
    
@@ -185,15 +254,19 @@ function App() {
       socketRef.current.emit('connect-to-sender',{to:remotePeer});
     },[]);
 
-    const uploadFile =useCallback(async(file)=>{
+    const uploadFile = useCallback(async (file) => {
       console.log('test 2');
-      if(!dataChannel.current){
-        console.error("Data Channel has not been initialised!!");
+      if (!dataChannel.current || dataChannel.current.readyState !== 'open') {
+        console.error('Data Channel has not been initialised!!');
         return;
       }
       console.log('test 3');
       console.log(dataChannel.current.readyState);
-      if(dataChannel.current.readyState=='open'){
+      const MAX_BUFFERED_AMOUNT = 13*1024*1024;
+      const CHUNK_SIZE = 256*1024;
+      const THROTTLE_DELAY = 15;
+      console.log(`Buffer metadata status: ${dataChannel.current.bufferedAmount} bytes`);
+      if (dataChannel.current.readyState == 'open') {
         const metadata = JSON.stringify({
           fileName: file.name,
           fileType: file.type,
@@ -201,28 +274,63 @@ function App() {
         });
         dataChannel.current.send(metadata);
         console.log('sent metadata');
-        setTimeout(() => {
-          console.log('hehe wait')
-        }, 500);
-        const fileBuffer = await file.arrayBuffer();
-        const chunkSize = 3*1024*1024;
-        const maxBufferAmount = 15*1024*1024;
-        let offset = 0;
-        while(offset<fileBuffer.byteLength){
-          const chunk=fileBuffer.slice(offset,offset+chunkSize);
-          console.log(`sending chunk with offset ${offset} `);
-          while(dataChannel.current.bufferedAmount>maxBufferAmount){
-            await new Promise((resolve)=>setTimeout(resolve,15));
+        await new Promise(res=>{
+          const check = () =>{
+            if(canSendData.current){ 
+              res();
+            }else if(dataChannel.current.readyState){
+              setTimeout(check,100);
+            }
+            else{
+              throw new Error('Data closed while Waiting');
+            }
+          };
+          check();
+        });
+        const stream = file.stream();
+        const reader = stream.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          console.log('up1');
+          if (done) {
+            console.log('sending EOF. the real success');
+            dataChannel.current.send('__EOF__');
+            break;
           }
-          dataChannel.current.send(chunk);
-          offset+=chunkSize;
+          for(let i=0;i<value.length;i+=CHUNK_SIZE){
+            const chunk = value.slice(i,i+CHUNK_SIZE);
+            while(dataChannel.current.readyState==='open' && dataChannel.current.bufferedAmount>MAX_BUFFERED_AMOUNT){
+              await new Promise(res=> setTimeout(res,THROTTLE_DELAY));
+            }
+            if(dataChannel.current.readyState!=='open'){
+              throw new Error('Data channel closed during transfer');
+            }
+            try{
+              dataChannel.current.send(chunk);
+              // await new Promise(res=>setTimeout(res,1));
+            }catch (e) {
+              console.error('error sendinfg ',e );
+              // throw e;
+            }
+          }
+          // while (dataChannel.current.bufferedAmount>MAX_BUFFERED_AMOUNT) {
+          //   console.log('up hold');
+          //   await new Promise(res => setTimeout(res, THROTTLE_DELAY));
+          // }
+          // try {
+          //   console.log('up send');
+          //   console.log(`Buffer status: ${dataChannel.current.bufferedAmount} bytes`);
+          //   dataChannel.current.send(value);
+          //   console.log(`Buffer status: ${dataChannel.current.bufferedAmount} bytes`);
+          //   await new Promise(res=> setTimeout(res,10));
+          //   console.log('sent a chunk');
+          // } catch (e) {
+          //   console.warn(e);
+          //   break;
+          // }
         }
-        console.log('file sent succesfully');
-        setTimeout(()=>{
-          console.log('closing data channel')
-          dataChannel.current?.close();
-        },1000);
-      }else{
+        console.log('file sent successfully');
+      } else {
         console.log('data channel is closed atp (before sharing anything) ');
       }
     },[]);
@@ -262,6 +370,8 @@ function App() {
         connectTO={connectTO}
         downloadURL={downloadURL}
         dataChOpen={dataChOpen}
+        showApprove={showApprove}
+        setIsReadyToDownload={setIsReadyToDownload}
         />}/>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
