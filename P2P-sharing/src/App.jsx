@@ -47,11 +47,11 @@ function App() {
         }
       }
     };
-    // Inside dataChannelEvents():
+    
     dataChannel.current.onerror = (error) => {
       setDataChOpen(false);
       console.error('DataChannel error:', error);
-      // Implement retry logic here if needed
+      
     };
 
     dataChannel.current.onbufferedamountlow = () => {
