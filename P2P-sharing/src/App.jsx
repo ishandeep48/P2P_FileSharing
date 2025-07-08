@@ -44,19 +44,6 @@ function App() {
       console.log("opened data channel");
       setDataChOpen(true);
     };
-    // peerRef.current.onicecandidate = event => {
-    //   if (event.candidate) {
-    //     if (remoteSocketID.current && signalState) {
-    //         socketRef.current.emit('ice-candidate', {
-    //           to: remoteSocketID.current,
-    //           candidate: event.candidate
-    //         });
-    //     } else {
-    //       pendingCandidates.current.push(event.candidate);
-    //     }
-    //   }
-    // };
-
     dataChannel.current.onerror = (error) => {
       setDataChOpen(false);
       console.error("DataChannel error:", error);
@@ -109,10 +96,7 @@ function App() {
     };
     askForLocation();
   }, [isReadyToDownload]);
-  // let downloadURL;
   const registerSocketHandlers = () => {
-    // dataChannel.current = peerRef.current.createDataChannel('file-transfer');
-
     peerRef.current.ondatachannel = (event) => {
       dataChannel.current = event.channel;
       receivedData.current = [];
@@ -171,7 +155,6 @@ function App() {
       const { who } = data;
       remoteSocketID.current = who;
       console.log(`receiver is ${who}`);
-      // Only the sender (offerer) creates the data channel
       dataChannel.current = peerRef.current.createDataChannel("file-transfer", {
         ordered: true,
       });
@@ -183,7 +166,7 @@ function App() {
             candidate: event.candidate,
             to: who,
           });
-          console.log('emitted a candidate ',event.candidate);
+          console.log("emitted a candidate ", event.candidate);
         } else {
           pendingCandidates.current.push(event.candidate);
         }
@@ -197,8 +180,6 @@ function App() {
       const { from, offer } = data;
       remoteSocketID.current = from;
       await peerRef.current.setRemoteDescription(offer);
-      // Add pending ICE candidates after remote description is set
-      // TODO
       pendingCandidates.current.forEach(async (candidate) => {
         try {
           await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -206,15 +187,20 @@ function App() {
           console.error("Error adding pending candidate (receiver):", err);
         }
       });
-      peerRef.current.onicecandidate= (event) =>{
-        if(event.candidate && peerRef.current.remoteDescription){
-          socketRef.current.emit('ice-candidate',{to:from,candidate:event.candidate});
-          console.log('sent a candidate to receiver ',event.candidate);
-        }else{
+      peerRef.current.onicecandidate = (event) => {
+        if (event.candidate && peerRef.current.remoteDescription) {
+          socketRef.current.emit("ice-candidate", {
+            to: from,
+            candidate: event.candidate,
+          });
+          console.log("sent a candidate to receiver ", event.candidate);
+        } else {
           pendingCandidates.current.push(event.candidate);
-          console.log(`pushed to pending candidate cause event.cadidate is  ${event.candidate} and `);
+          console.log(
+            `pushed to pending candidate cause event.cadidate is  ${event.candidate} and `
+          );
         }
-      }
+      };
       const answer = await peerRef.current.createAnswer();
       await peerRef.current.setLocalDescription(answer);
       setSignalState(true);
@@ -226,31 +212,29 @@ function App() {
       console.log(` socket id ${from} se answer receive hua`);
       await peerRef.current.setRemoteDescription(offer);
       setSignalState(true);
-      // Add pending ICE candidates after remote description is set
       pendingCandidates.current.forEach(async (candidate) => {
         try {
           await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
           console.log("adding candidate ", candidate);
-          console.log('ice state is ',peerRef.current.iceGatheringState);
+          console.log("ice state is ", peerRef.current.iceGatheringState);
         } catch (err) {
           console.error("Error adding pending candidate (sender):", err);
         }
       });
-      peerRef.current.onicegatheringstatechange = ()=>{
-        if(peerRef.current.iceGatheringState=='complete'){
-          dataChannel.current = peerRef.current.createDataChannel('file-transfer',{ordered:true});
+      peerRef.current.onicegatheringstatechange = () => {
+        if (peerRef.current.iceGatheringState == "complete") {
+          dataChannel.current = peerRef.current.createDataChannel(
+            "file-transfer",
+            { ordered: true }
+          );
           senderDataChannelEvents();
-          if(dataChannel.current.readyState=='open'){
-          console.log('aakhir me data channel open hua');
-          }else{
-            console.log('ab b n hua');
+          if (dataChannel.current.readyState == "open") {
+            console.log("aakhir me data channel open hua");
+          } else {
+            console.log("ab b n hua");
           }
         }
-      }
-      
-      // Only the offerer (sender) creates the data channel!
-      // Remove dataChannel.current = peerRef.current.createDataChannel(...)
-      // Remove senderDataChannelEvents() here
+      };
     });
 
     socketRef.current.on("ice-candidate", async (data) => {
@@ -259,14 +243,13 @@ function App() {
       );
       const { candidate } = data;
       if (!peerRef.current.remoteDescription) {
-        // Queue candidate if remote description not set yet
         pendingCandidates.current.push(candidate);
-        console.log('pushing to pending');
+        console.log("pushing to pending");
         return;
       }
       try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log('bina pending me bheje add kara');
+        console.log("bina pending me bheje add kara");
       } catch (err) {
         console.error("error addind candidate  ", err);
       }
@@ -280,8 +263,6 @@ function App() {
     socketRef.current = io(socketServerIP, {
       transports: ["websocket"],
       upgrade: false,
-      // rejectUnauthorized: false,
-      // secure : true
     });
     peerRef.current = new RTCPeerConnection(rtcConfig);
 
@@ -317,7 +298,7 @@ function App() {
         fileType: file.type,
         fileSize: file.size,
       });
-      // console.log(metadata);
+
       fileSizeRef.current = file.size;
       dataChannel.current.send(metadata);
       startTimeRef.current = Date.now();
@@ -340,10 +321,8 @@ function App() {
         const { done, value } = await reader.read();
         console.log("up1");
         if (done) {
-          // setTransferCompletion(100);
           console.log("sending EOF. the real success");
           dataChannel.current.send("__EOF__");
-          // setTransferCompletion(parseFloat(100).toFixed(2));
 
           break;
         }
@@ -372,7 +351,6 @@ function App() {
                 (byteSentRef.current / fileSizeRef.current) * 100
               ).toFixed(2)
             );
-            // await new Promise(res=>setTimeout(res,1));
           } catch (e) {
             console.error("error sendinfg ", e);
           }
@@ -383,24 +361,6 @@ function App() {
       console.log("data channel is closed atp (before sharing anything) ");
     }
   }, []);
-
-  // const generateNewId = useCallback(() => {
-  //   if (socketRef.current) {
-  //     socketRef.current.disconnect();
-  //     if (dataChannel.current) {
-  //       dataChannel.current.close();
-  //     }
-  //     if (peerRef.current) {
-  //       peerRef.current.close();
-  //     }
-  //     peerRef.current = null;
-  //     dataChannel.current = null;
-  //   }
-  //   peerRef.current = new RTCPeerConnection(rtcConfig);
-  //   socketRef.current = io(socketServerIP);
-  //   setIsSocket(true);
-  //   registerSocketHandlers();
-  // }, []);
   const generateNewId = useCallback(() => {
     // Reset all state
     setConnectionId("");
@@ -448,15 +408,12 @@ function App() {
       socketRef.current = null;
     }
 
-    // Reinitialize everything
     socketRef.current = io(socketServerIP, {
       transports: ["websocket"],
       upgrade: false,
     });
 
     peerRef.current = new RTCPeerConnection(rtcConfig);
-    // iceGatheringComplete.current = false; // Reset ICE state
-
     setIsSocket(true);
     registerSocketHandlers();
   }, [registerSocketHandlers]);
