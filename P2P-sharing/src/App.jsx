@@ -22,6 +22,8 @@ function App() {
   const [showApprove, setShowApprove] = useState(false);
   const [transferCompletion, setTransferCompletion] = useState(0);
   const [speed, setSpeed] = useState(0);
+  const [receiverSpeed, setReceiverSpeed] = useState(0);
+  const [wantsClose,setWantsClose] = useState(false);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef = useRef();
@@ -38,6 +40,10 @@ function App() {
   const writableStream = useRef(null);
   const fileSizeRef = useRef(null);
   const byteSentRef = useRef(0);
+  const lastChunkTimeRef = useRef(null);
+  const lastBytesReceivedRef = useRef(0);
+  const lastSenderChunkTimeRef = useRef(null);
+  const lastSenderBytesSentRef = useRef(0);
 
   const dataChannelEvents = () => {
     dataChannel.current.onopen = () => {
@@ -57,8 +63,8 @@ function App() {
     dataChannel.current.bufferedAmountLowThreshold = 128 * 1024;
     dataChannel.current.onmessage = async (event) => {
       if (typeof event.data == "string" && event.data == "__EOF_ACK__") {
-        console.log("EOF ACK Received closing DataChannel");
-        dataChannel.current.close();
+        console.log("EOF ACK Received ");
+        // dataChannel.current.close();
       } else if (typeof event.data == "string") {
         const parsedData = JSON.parse(event.data);
         const { status } = parsedData;
@@ -102,6 +108,8 @@ function App() {
       receivedData.current = [];
       dataChannel.current.onopen = () => {
         setDataChOpen(true);
+        lastChunkTimeRef.current = Date.now();
+        lastBytesReceivedRef.current = 0;
         console.log("data channel opened for transfer");
         console.log(dataChannel.current.readyState);
       };
@@ -133,11 +141,20 @@ function App() {
           console.log("actual data aaya hua ");
 
           await writableStream.current.write(event.data);
-          byteSentRef.current += event.data.size || event.data.byteLength || 0;
+          const now = Date.now();
+          const bytesReceived = byteSentRef.current + (event.data.size || event.data.byteLength || 0);
+          const timeDelta = (now - (lastChunkTimeRef.current || now)) / 1000; 
+          const bytesDelta = bytesReceived - (lastBytesReceivedRef.current || 0);
+          if (timeDelta > 0) {
+            let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024); 
+            instSpeed = parseFloat(instSpeed).toFixed(2);
+            setReceiverSpeed(instSpeed);
+          }
+          lastChunkTimeRef.current = now;
+          lastBytesReceivedRef.current = bytesReceived;
+          byteSentRef.current = bytesReceived;
           setTransferCompletion(
-            parseFloat(
-              (byteSentRef.current / fileSizeRef.current) * 100
-            ).toFixed(2)
+            parseFloat((byteSentRef.current / fileSizeRef.current) * 100).toFixed(2)
           );
         } else {
           console.warn("idk wtf has been received. ");
@@ -221,6 +238,7 @@ function App() {
           console.error("Error adding pending candidate (sender):", err);
         }
       });
+
       peerRef.current.onicegatheringstatechange = () => {
         if (peerRef.current.iceGatheringState == "complete") {
           dataChannel.current = peerRef.current.createDataChannel(
@@ -235,6 +253,9 @@ function App() {
           }
         }
       };
+      dataChannel.current.onclose = ()=>{
+        console.log('closed data channel');
+      }
     });
 
     socketRef.current.on("ice-candidate", async (data) => {
@@ -289,19 +310,17 @@ function App() {
     const MAX_BUFFERED_AMOUNT = 13 * 1024 * 1024;
     const CHUNK_SIZE = 256 * 1024;
     const THROTTLE_DELAY = 10;
-    console.log(
-      `Buffer metadata status: ${dataChannel.current.bufferedAmount} bytes`
-    );
     if (dataChannel.current.readyState == "open") {
       const metadata = JSON.stringify({
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
       });
-
       fileSizeRef.current = file.size;
       dataChannel.current.send(metadata);
       startTimeRef.current = Date.now();
+      lastSenderChunkTimeRef.current = Date.now();
+      lastSenderBytesSentRef.current = 0;
       console.log("sent metadata");
       await new Promise((res) => {
         const check = () => {
@@ -317,13 +336,12 @@ function App() {
       });
       const stream = file.stream();
       const reader = stream.getReader();
+      let senderBytesSent = 0;
       while (true) {
         const { done, value } = await reader.read();
-        console.log("up1");
         if (done) {
           console.log("sending EOF. the real success");
           dataChannel.current.send("__EOF__");
-
           break;
         }
         for (let i = 0; i < value.length; i += CHUNK_SIZE) {
@@ -340,11 +358,16 @@ function App() {
           try {
             dataChannel.current.send(chunk);
             const now = Date.now();
-            const timeToSend = (now - startTimeRef.current) / 1000;
-            let transferSpeed = (byteSentRef.current * 8) / timeToSend;
-            transferSpeed /= 1024 * 1024;
-            transferSpeed = parseFloat(transferSpeed).toFixed(2);
-            setSpeed(transferSpeed);
+            const bytesSent = byteSentRef.current + (chunk.byteLength || CHUNK_SIZE);
+            const timeDelta = (now - (lastSenderChunkTimeRef.current || now)) / 1000;
+            const bytesDelta = bytesSent - (lastSenderBytesSentRef.current || 0);
+            if (timeDelta > 0) {
+              let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024);
+              instSpeed = parseFloat(instSpeed).toFixed(2);
+              setSpeed(instSpeed);
+            }
+            lastSenderChunkTimeRef.current = now;
+            lastSenderBytesSentRef.current = bytesSent;
             byteSentRef.current += chunk.byteLength || CHUNK_SIZE;
             setTransferCompletion(
               parseFloat(
@@ -361,6 +384,16 @@ function App() {
       console.log("data channel is closed atp (before sharing anything) ");
     }
   }, []);
+  useEffect(()=>{
+    if(wantsClose){
+      try{
+        dataChannel.current.close();
+        console.log('data channel close called');
+      }catch (err){
+        console.error('got error ',err);
+      }
+    }
+  },[wantsClose])
   const generateNewId = useCallback(() => {
     // Reset all state
     setConnectionId("");
@@ -433,6 +466,7 @@ function App() {
               dataChOpen={dataChOpen}
               transferCompletion={transferCompletion}
               speed={speed}
+              setWantsClose={setWantsClose}
             />
           }
         />
@@ -446,6 +480,8 @@ function App() {
               showApprove={showApprove}
               setIsReadyToDownload={setIsReadyToDownload}
               transferCompletion={transferCompletion}
+              speed={receiverSpeed}
+              setWantsClose={setWantsClose}
             />
           }
         />

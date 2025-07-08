@@ -3,7 +3,7 @@ import { data } from 'react-router-dom';
 import {Scanner} from '@yudiel/react-qr-scanner';
 // import QRHandler from './QRHandler';
 
-export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showApprove,setIsReadyToDownload,transferCompletion}){
+export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showApprove,setIsReadyToDownload,transferCompletion,speed,setWantsClose}){
     const [count,setCount] = useState(0);
     const[conId,setConId]=useState('');
     const [sender,setSender]=useState();
@@ -39,6 +39,9 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
     }
     const approveDownload = () =>{
         setIsReadyToDownload(true);
+    }
+    const close = () =>{
+        setWantsClose(true);
     }
     return(
         <div className="flex flex-col items-center justify-center mt-24">
@@ -76,21 +79,18 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
             >APPROVE DOWNLOAD
             </button>
+            <p>transfer rate is  : {speed} Mbps</p>
+            <button
+            onClick={close}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+                DISCONNECT
+            </button>
             </div>
             )}
             { count>0 && !dataChOpen && <p>The Data Channel is still not connected. Please try to connect again </p>}
             
-            {downloadURL?.url &&(
-            <div className="mt-6">
-                
-            <button 
-            onClick={downloadFile}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
-            > CLICK HERE TO DOWNLOAD THE RECEIVED FILE
-            </button>
             
-            </div>
-            )}
             <div>
                 Received {transferCompletion} %
             </div>
