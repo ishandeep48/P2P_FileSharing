@@ -27,16 +27,16 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
         })
         connectTO(conId)
     }
-    const downloadFile = () =>{
-        if(!downloadURL) return;
-        const a = document.createElement('a');
-        console.log(downloadURL);
-        a.href = downloadURL.url;
-        a.download = downloadURL.fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
+    // const downloadFile = () =>{
+    //     if(!downloadURL) return;
+    //     const a = document.createElement('a');
+    //     console.log(downloadURL);
+    //     a.href = downloadURL.url;
+    //     a.download = downloadURL.fileName;
+    //     document.body.appendChild(a);
+    //     a.click();
+    //     document.body.removeChild(a);
+    // }
     const approveDownload = () =>{
         setIsReadyToDownload(true);
     }
@@ -79,7 +79,7 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
             >APPROVE DOWNLOAD
             </button>
-            <p>transfer rate is  : {speed} Mbps</p>
+            
             <button
             onClick={close}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -90,7 +90,7 @@ export default function ReceiverForm({connectTO,downloadURL,dataChOpen,showAppro
             )}
             { count>0 && !dataChOpen && <p>The Data Channel is still not connected. Please try to connect again </p>}
             
-            
+            <p>transfer rate is  : {speed} Mbps</p>
             <div>
                 Received {transferCompletion} %
             </div>

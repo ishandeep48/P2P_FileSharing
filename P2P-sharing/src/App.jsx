@@ -12,7 +12,7 @@ import Receiver from "./pages/Receiver";
 import "./App.css";
 import { useCallback } from "react";
 function App() {
-  const socketServerIP = "wss://192.168.29.60:5000";
+  const socketServerIP = "wss://10.12.75.5:5000";
   const [connectionId, setConnectionId] = useState("");
   const [isSocket, setIsSocket] = useState(false);
   const [downloadURL, setDownloadURL] = useState(null);
@@ -23,7 +23,7 @@ function App() {
   const [transferCompletion, setTransferCompletion] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [receiverSpeed, setReceiverSpeed] = useState(0);
-  const [wantsClose,setWantsClose] = useState(false);
+  const [wantsClose, setWantsClose] = useState(false);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef = useRef();
@@ -44,6 +44,8 @@ function App() {
   const lastBytesReceivedRef = useRef(0);
   const lastSenderChunkTimeRef = useRef(null);
   const lastSenderBytesSentRef = useRef(0);
+  const lastUpdateTimeRef = useRef(0);
+  const lastUpdateTransferRef = useRef(0);
 
   const dataChannelEvents = () => {
     dataChannel.current.onopen = () => {
@@ -72,6 +74,10 @@ function App() {
         console.log(parsedData);
         if (status) {
           canSendData.current = true;
+          console.log(canSendData.current);
+        }else if(!status){
+          canSendData.current=false;
+          console.log(canSendData.current)
         }
       }
     };
@@ -113,6 +119,9 @@ function App() {
         console.log("data channel opened for transfer");
         console.log(dataChannel.current.readyState);
       };
+
+      // ---------------------------------------------------s
+
       dataChannel.current.onmessage = async (event) => {
         if (!isMetaDataReceivedRef.current) {
           if (typeof event.data == "string") {
@@ -135,31 +144,61 @@ function App() {
         } else if (typeof event.data == "string" && event.data == "__EOF__") {
           console.log("EOF Received,closing stream");
           await writableStream.current.close();
+          setTransferCompletion(parseFloat(100).toFixed(2));
           dataChannel.current.send("__EOF_ACK__");
+          //RESET THESE STUFF AFTER LIKE 1st FILE IS DONE
+          isMetaDataReceivedRef.current = false;
+          byteSentRef.current = 0;
+          lastChunkTimeRef.current = null;
+          lastBytesReceivedRef.current = 0;
+          lastUpdateTimeRef.current = 0;
+          lastUpdateTransferRef.current = 0;
+          writableStream.current=null;
+          setIsReadyToDownload(false);
+          setShowApprove(false);
+          const reportMessage = {
+            status: false,
+          };
+          const sentData = JSON.stringify(reportMessage);
+          dataChannel.current.send(sentData);
+          console.log("sent report to sender to not send without permission ", sentData);
           return;
         } else if (event.data) {
           console.log("actual data aaya hua ");
 
           await writableStream.current.write(event.data);
           const now = Date.now();
-          const bytesReceived = byteSentRef.current + (event.data.size || event.data.byteLength || 0);
-          const timeDelta = (now - (lastChunkTimeRef.current || now)) / 1000; 
-          const bytesDelta = bytesReceived - (lastBytesReceivedRef.current || 0);
+          const bytesReceived =
+            byteSentRef.current +
+            (event.data.size || event.data.byteLength || 0);
+          const timeDelta = (now - (lastChunkTimeRef.current || now)) / 1000;
+          const bytesDelta =
+            bytesReceived - (lastBytesReceivedRef.current || 0);
           if (timeDelta > 0) {
-            let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024); 
+            let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024);
             instSpeed = parseFloat(instSpeed).toFixed(2);
-            setReceiverSpeed(instSpeed);
+            if (now - lastUpdateTimeRef.current >= 500) {
+              setReceiverSpeed(instSpeed);
+              lastUpdateTimeRef.current = now;
+            }
           }
           lastChunkTimeRef.current = now;
           lastBytesReceivedRef.current = bytesReceived;
           byteSentRef.current = bytesReceived;
-          setTransferCompletion(
-            parseFloat((byteSentRef.current / fileSizeRef.current) * 100).toFixed(2)
-          );
+          if (now - lastUpdateTransferRef.current >= 100) {
+            setTransferCompletion(
+              parseFloat(
+                (byteSentRef.current / fileSizeRef.current) * 100
+              ).toFixed(2)
+            );
+            lastUpdateTransferRef.current = now;
+          }
         } else {
           console.warn("idk wtf has been received. ");
         }
       };
+
+      // --------------------------------------
       dataChannel.current.onclose = async () => {
         console.log("Data Channel is closed");
       };
@@ -253,9 +292,9 @@ function App() {
           }
         }
       };
-      dataChannel.current.onclose = ()=>{
-        console.log('closed data channel');
-      }
+      dataChannel.current.onclose = () => {
+        console.log("closed data channel");
+      };
     });
 
     socketRef.current.on("ice-candidate", async (data) => {
@@ -298,7 +337,7 @@ function App() {
   const connectTO = useCallback((remotePeer) => {
     socketRef.current.emit("connect-to-sender", { to: remotePeer });
   }, []);
-
+  // ----------------------------------------------------------------------------
   const uploadFile = useCallback(async (file) => {
     console.log("test 2");
     if (!dataChannel.current || dataChannel.current.readyState !== "open") {
@@ -316,9 +355,10 @@ function App() {
         fileType: file.type,
         fileSize: file.size,
       });
+      setTransferCompletion((0.0).toFixed(2));
       fileSizeRef.current = file.size;
       dataChannel.current.send(metadata);
-      startTimeRef.current = Date.now();
+      // startTimeRef.current = Date.now();
       lastSenderChunkTimeRef.current = Date.now();
       lastSenderBytesSentRef.current = 0;
       console.log("sent metadata");
@@ -336,11 +376,12 @@ function App() {
       });
       const stream = file.stream();
       const reader = stream.getReader();
-      let senderBytesSent = 0;
+      // let senderBytesSent = 0;
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           console.log("sending EOF. the real success");
+          setTransferCompletion(parseFloat(100).toFixed(2));
           dataChannel.current.send("__EOF__");
           break;
         }
@@ -358,22 +399,30 @@ function App() {
           try {
             dataChannel.current.send(chunk);
             const now = Date.now();
-            const bytesSent = byteSentRef.current + (chunk.byteLength || CHUNK_SIZE);
-            const timeDelta = (now - (lastSenderChunkTimeRef.current || now)) / 1000;
-            const bytesDelta = bytesSent - (lastSenderBytesSentRef.current || 0);
+            const bytesSent = byteSentRef.current + chunk.byteLength;
+            const timeDelta =
+              (now - (lastSenderChunkTimeRef.current || now)) / 1000;
+            const bytesDelta =
+              bytesSent - (lastSenderBytesSentRef.current || 0);
             if (timeDelta > 0) {
               let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024);
               instSpeed = parseFloat(instSpeed).toFixed(2);
-              setSpeed(instSpeed);
+              if (now - lastUpdateTimeRef.current >= 500) {
+                setSpeed(instSpeed);
+                lastUpdateTimeRef.current = now;
+              }
             }
             lastSenderChunkTimeRef.current = now;
             lastSenderBytesSentRef.current = bytesSent;
-            byteSentRef.current += chunk.byteLength || CHUNK_SIZE;
-            setTransferCompletion(
-              parseFloat(
-                (byteSentRef.current / fileSizeRef.current) * 100
-              ).toFixed(2)
-            );
+            byteSentRef.current += chunk.byteLength;
+            if (now - lastUpdateTransferRef.current >= 100) {
+              setTransferCompletion(
+                parseFloat(
+                  (byteSentRef.current / fileSizeRef.current) * 100
+                ).toFixed(2)
+              );
+              lastUpdateTransferRef.current = now;
+            }
           } catch (e) {
             console.error("error sendinfg ", e);
           }
@@ -384,18 +433,19 @@ function App() {
       console.log("data channel is closed atp (before sharing anything) ");
     }
   }, []);
-  useEffect(()=>{
-    if(wantsClose){
-      try{
+  // ----------------------------------------------------------------------
+  useEffect(() => {
+    if (wantsClose) {
+      try {
         dataChannel.current.close();
-        console.log('data channel close called');
-      }catch (err){
-        console.error('got error ',err);
+        console.log("data channel close called");
+        
+      } catch (err) {
+        console.error("got error ", err);
       }
     }
-  },[wantsClose])
+  }, [wantsClose]);
   const generateNewId = useCallback(() => {
-    // Reset all state
     setConnectionId("");
     setIsSocket(false);
     setDownloadURL(null);
@@ -406,20 +456,17 @@ function App() {
     setTransferCompletion(0);
     setSpeed(0);
 
-    // Reset refs
     startTimeRef.current = null;
     isMetaDataReceivedRef.current = false;
     remoteSocketID.current = null;
     pendingCandidates.current = [];
     canSendData.current = false;
-    // iceGatheringComplete.current = false;
     fileNameRef.current = "received_file";
     fileTypeRef.current = "text/plain";
     metadataRef.current = null;
     fileSizeRef.current = null;
     byteSentRef.current = 0;
 
-    // Cleanup WebRTC
     if (dataChannel.current) {
       dataChannel.current.close();
       dataChannel.current = null;
@@ -430,7 +477,6 @@ function App() {
       peerRef.current = null;
     }
 
-    // Cleanup socket with proper event removal
     if (socketRef.current) {
       socketRef.current.off("connection-id");
       socketRef.current.off("wants-to-connect");
