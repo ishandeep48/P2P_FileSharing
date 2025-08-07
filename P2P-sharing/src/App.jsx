@@ -12,7 +12,7 @@ import Receiver from "./pages/Receiver";
 import "./App.css";
 import { useCallback } from "react";
 function App() {
-  const socketServerIP = "wss://10.12.75.5:5000";
+  const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
   const [connectionId, setConnectionId] = useState("");
   const [isSocket, setIsSocket] = useState(false);
   const [downloadURL, setDownloadURL] = useState(null);
@@ -317,7 +317,17 @@ function App() {
   };
 
   const rtcConfig = {
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    iceTransportPolicy: "all",
+    iceServers: [
+      { 
+        urls: "stun:stun.l.google.com:19302" 
+      },
+      {
+        urls:import.meta.env.VITE_TURN_SERVER,
+        username:import.meta.env.VITE_TURN_USERNAME,
+        credential:import.meta.env.VITE_TURN_PASSWORD
+      }
+    ],
   };
   useEffect(() => {
     socketRef.current = io(socketServerIP, {
