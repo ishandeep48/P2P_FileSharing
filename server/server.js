@@ -15,7 +15,7 @@ const { Server } = require('socket.io');
 // const { create } = require('domain');
 
 app.use(cors());
-
+const PORT = process.env.PORT ||5000;
 // Optimized Socket.IO configuration for better performance
 const io = new Server(server, {
     cors: {
@@ -95,6 +95,6 @@ io.on('connection', socket => {
 app.get('/',(req,res)=>{
     res.send("This is a test");
 })
-server.listen(5000,'0.0.0.0',()=>{
-    console.log("The backend server is running at port 5000");
+server.listen(PORT,'0.0.0.0',()=>{
+    console.log(`The backend server is running at port ${PORT}`);
 })
