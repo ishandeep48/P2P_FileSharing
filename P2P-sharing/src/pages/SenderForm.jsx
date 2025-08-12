@@ -1,56 +1,129 @@
 import React, { useState } from "react";
-import {QRCodeCanvas} from 'qrcode.react';
- 
-export default function SenderForm({ connectionId, generateNewId, isSocket, uploadFile, dataChOpen ,transferCompletion,speed}) {
-  const [file, setFile] = useState(null);
+import ConnectionCard from "../components/ConnectionCard";
+import FileUpload from "../components/FileUpload";
+import ProgressBar from "../components/ProgressBar";
+import LoadingSpinner from "../components/LoadingSpinner";
+import Notification from "../components/Notification";
+import ServerWarning from "../components/ServerWarning";
 
-  const fileChange = (evt) => {
-   const fill=evt.target.files[0];
-   if(fill){
-    setFile(fill);
-   }
+export default function SenderForm({ 
+  connectionId, 
+  generateNewId, 
+  isSocket, 
+  uploadFile, 
+  dataChOpen, 
+  transferCompletion, 
+  speed,
+  setWantsClose,
+  socketConnected,
+  socketError
+}) {
+  console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
+  const [file, setFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const handleFileSelect = (selectedFile) => {
+    setFile(selectedFile);
   };
-  const submitFile = () => {
-   console.log('test 1');
-    if (file) uploadFile(file);
+
+  const handleSubmitFile = async () => {
+    if (file && dataChOpen) {
+      setIsUploading(true);
+      setNotification({ message: 'Starting file transfer...', type: 'info' });
+      
+      try {
+        await uploadFile(file);
+        setNotification({ message: 'File sent successfully!', type: 'success' });
+      } catch (error) {
+        setNotification({ message: `Transfer failed: ${error.message}`, type: 'error' });
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
+
   return (
-    <div className="flex flex-col items-center justify-center mt-16">
-      {isSocket && (
-        <>
-        <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
-          Your Connection ID:{" "}
-          <span className="text-blue-600">{connectionId}</span>
-        </h1>
-        <div className="bg-white p-4 m-4">
-        <QRCodeCanvas value={connectionId} size={256}/>
+    <div className="min-h-screen py-16 px-4">
+      {/* Server Warning */}
+      <ServerWarning socketError={socketError} socketConnected={socketConnected} />
+      
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Connection Card */}
+        <ConnectionCard
+          connectionId={connectionId}
+          isConnected={dataChOpen}
+          onGenerateNewId={generateNewId}
+          socketConnected={socketConnected}
+          socketError={socketError}
+        />
+
+        {/* File Upload Section */}
+        <div className="space-y-6">
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            selectedFile={file}
+            isConnected={dataChOpen}
+          />
+
+          {/* Send Button */}
+          {file && dataChOpen && (
+            <div className="text-center">
+              <button
+                onClick={handleSubmitFile}
+                disabled={isUploading}
+                className={`bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-transparent ${
+                  isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isUploading ? (
+                  <div className="flex items-center space-x-2">
+                    <LoadingSpinner size="sm" text="" />
+                    <span>Sending...</span>
+                  </div>
+                ) : (
+                  '🚀 Send File'
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Status Messages */}
+          {!dataChOpen && (
+            <div className="text-center p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+              <p className="text-yellow-200">
+                ⏳ Waiting for receiver to connect...
+              </p>
+            </div>
+          )}
+
+          {file && !dataChOpen && (
+            <div className="text-center p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-200">
+                📤 File ready to send. Waiting for connection...
+              </p>
+            </div>
+          )}
         </div>
-        </>
-      )}
-      <button
-        className="mb-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition duration-200"
-        onClick={generateNewId}
-      >
-        Click here to generate new connection ID
-      </button>
-      <input
-        type="file"
-        onChange={fileChange}
-        className="mb-4 block w-72 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-      {!dataChOpen && <p>The Data Channel is still closed can't share any file to anyone. </p>}
-      <button
-        className={`bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow transition duration-200 `}
-        onClick={submitFile}
-      //   disabled={!(file && dataChOpen)}
-      >
-        SEND FILE!!
-      </button>
-      <div className="mt-2 mb-2">
-        Transfered {transferCompletion} %
-      </div>
-      <div className="mb-2">
-        Speed {speed} Mbps
+
+        {/* Progress Bar */}
+        {(transferCompletion > 0 || speed > 0) && (
+          <ProgressBar
+            progress={transferCompletion}
+            speed={speed}
+            fileName={file?.name}
+            fileSize={file?.size}
+          />
+        )}
+
+        {/* Notification */}
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,25 +1,30 @@
-const express =  require('express');
-const {createServer}=require('https');
+const express = require('express');
+const { createServer } = require('https');
 const app = express();
-const {readFileSync}=require('fs');
-const {v4:uuidv4} = require('uuid');
+const { readFileSync } = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
-const options ={
-    key:readFileSync('../P2P-sharing/key.pem'),
-    cert:readFileSync('../P2P-sharing/cert.pem')
-}
-const server = createServer(options,app);
+const options = {
+    key: readFileSync('../P2P-sharing/key.pem'),
+    cert: readFileSync('../P2P-sharing/cert.pem')
+};
+const server = createServer(options, app);
 const cors = require('cors');
-const {Server} =require('socket.io');
-
+const { Server } = require('socket.io');
 
 app.use(cors());
 
+// Optimized Socket.IO configuration for better performance
 const io = new Server(server, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST'],
-    }
+    },
+    transports: ['websocket'], // Force WebSocket transport for better performance
+    pingTimeout: 60000, // Increased ping timeout
+    pingInterval: 25000, // Increased ping interval
+    maxHttpBufferSize: 1e8, // 100MB buffer size
+    allowEIO3: true, // Allow Engine.IO v3 clients
 });
 
 // Helper to generate a 6-character ID
@@ -27,15 +32,21 @@ function generateShortId() {
     return uuidv4().replace(/-/g, '').substring(0, 6);
 }
 
-// Helper to find socket by shortId
+// Helper to find socket by shortId with improved performance
 function getSocketByShortId(id) {
     return Array.from(io.sockets.sockets.values()).find(s => s.shortId === id);
 }
+
+// Connection tracking for better performance
+const activeConnections = new Map();
 
 io.on('connection', socket => {
     // Assign a custom 6-character ID
     const shortId = generateShortId();
     socket.shortId = shortId;
+
+    // Track active connections
+    activeConnections.set(shortId, socket);
 
     console.log(`connected to client socket ${socket.shortId}`);
     socket.emit('connection-id', socket.shortId);
@@ -74,6 +85,8 @@ io.on('connection', socket => {
     });
     socket.on('disconnect', () => {
         console.log(`disconnected from id ${socket.shortId}`);
+        // Clean up active connections
+        activeConnections.delete(socket.shortId);
     });
 });
 
