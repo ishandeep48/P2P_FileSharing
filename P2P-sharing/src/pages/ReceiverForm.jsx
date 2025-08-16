@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState ,useRef} from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import ProgressBar from '../components/ProgressBar';
 
@@ -16,6 +16,7 @@ export default function ReceiverForm({
   const [conId, setConId] = useState('');
   const [sender, setSender] = useState();
   const [wantsQR, setWantsQR] = useState(false);
+  const approveRef = useRef();
 
   const handleQRReqButton = () => {
     setWantsQR(!wantsQR);
@@ -28,6 +29,14 @@ export default function ReceiverForm({
     setWantsQR(false);
   };
 
+  useEffect(()=>{
+    if(showApprove && approveRef.current){
+      approveRef.current.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      });
+    }
+  },[showApprove])
   const updateConId = (evt) => {
     setConId(evt.target.value);
   };
@@ -99,7 +108,7 @@ export default function ReceiverForm({
           </div>
 
           {/* Connection Status */}
-          {sender && (
+          {sender && dataChOpen && (
             <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg text-center">
               <p className="text-green-200 font-semibold mb-3">
                 ✅ Connected to sender: {sender}
@@ -124,7 +133,7 @@ export default function ReceiverForm({
 
         {/* File Approval Section */}
         {showApprove && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
+          <div ref = { approveRef}className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
             <h3 className="text-2xl font-bold text-white text-center mb-6">
               📄 Incoming File Transfer
             </h3>
