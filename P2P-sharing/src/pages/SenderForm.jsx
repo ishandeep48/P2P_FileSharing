@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useRef,useLayoutEffect,useEffect } from "react";
 import ConnectionCard from "../components/ConnectionCard";
 import FileUpload from "../components/FileUpload";
 import ProgressBar from "../components/ProgressBar";
@@ -22,11 +22,13 @@ export default function SenderForm({
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [notification, setNotification] = useState(null);
-
+  const conCardRef = useRef(null)
+  const uploadRef = useRef()
+  const progressRef = useRef()
   const handleFileSelect = (selectedFile) => {
     setFile(selectedFile);
   };
-
+let changed = false;
   const handleSubmitFile = async () => {
     if (file && dataChOpen) {
       setIsUploading(true);
@@ -43,6 +45,32 @@ export default function SenderForm({
     }
   };
 
+  useLayoutEffect(()=>{
+    if(conCardRef.current){
+      conCardRef.current.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      });
+    }
+  },[])
+  useEffect(()=>{
+    if(dataChOpen && uploadRef.current){
+      uploadRef.current.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      })
+    }
+  },[dataChOpen])
+
+  useEffect(()=>{
+    if(transferCompletion>0 && progressRef.current && !changed){
+      progressRef.current.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      });
+      changed=(changed?true:true);
+    }
+  },[transferCompletion])
   return (
     <div className="min-h-screen py-16 px-4">
       {/* Server Warning */}
@@ -50,16 +78,17 @@ export default function SenderForm({
       
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Connection Card */}
+        <div ref = {conCardRef}>
         <ConnectionCard
           connectionId={connectionId}
           isConnected={dataChOpen}
           onGenerateNewId={generateNewId}
           socketConnected={socketConnected}
           socketError={socketError}
-        />
+        /></div>
 
         {/* File Upload Section */}
-        <div className="space-y-6">
+        <div className="space-y-6" ref={uploadRef}>
           <FileUpload
             onFileSelect={handleFileSelect}
             selectedFile={file}
@@ -82,7 +111,7 @@ export default function SenderForm({
                     <span>Sending...</span>
                   </div>
                 ) : (
-                  '🚀 Send File'
+                  ' Send File'
                 )}
               </button>
             </div>
@@ -107,6 +136,7 @@ export default function SenderForm({
         </div>
 
         {/* Progress Bar */}
+        <div ref={progressRef}>
         {(transferCompletion > 0 || speed > 0) && (
           <ProgressBar
             progress={transferCompletion}
@@ -115,7 +145,7 @@ export default function SenderForm({
             fileSize={file?.size}
           />
         )}
-
+        </div>
         {/* Notification */}
         {notification && (
           <Notification

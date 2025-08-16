@@ -11,7 +11,7 @@ function Home() {
                     {/* Hero Section */}
                     <div className="space-y-6">
                         <h1 className="text-6xl font-bold text-white mb-4">
-                            <span className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-red-400 to-yellow-700 bg-clip-text text-transparent">
                                 P2P File Sharing
                             </span>
                         </h1>
@@ -44,15 +44,15 @@ function Home() {
                     <div className="flex flex-col sm:flex-row gap-6 justify-center mt-16">
                         <Link
                             to="/sender"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent"
+                            className="bg-gradient-to-r from-red-400 to-red-700 hover:from-red-500 hover:to-red-800 !text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-transparent"
                         >
-                            📤 Send Files
+                             Send Files
                         </Link>
                         <Link
                             to="/receiver"
-                            className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-transparent"
+                            className="bg-gradient-to-r from-yellow-400 to-yellow-700 hover:from-yellow-500 hover:to-orange-700 visited:text-white !text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-transparent"
                         >
-                            📥 Receive Files
+                             Receive Files
                         </Link>
                     </div>
 

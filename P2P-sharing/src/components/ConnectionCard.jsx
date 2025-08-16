@@ -49,7 +49,7 @@ const ConnectionCard = ({ connectionId, isConnected, onGenerateNewId, socketConn
 
         <button
           onClick={onGenerateNewId}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent"
+          className="w-full bg-gradient-to-r from-red-400 to-yellow-700 hover:from-red-500 hover:to-yellow-800 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-transparent"
         >
           Generate New ID
         </button>

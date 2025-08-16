@@ -36,7 +36,7 @@ const ProgressBar = ({ progress, speed, fileName, fileSize }) => {
         </div>
         <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300 ease-out relative"
+            className="h-full bg-gradient-to-r from-red-400 to-yellow-700 rounded-full transition-all duration-300 ease-out relative"
             style={{ width: `${Math.min(safeProgress, 100)}%` }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>

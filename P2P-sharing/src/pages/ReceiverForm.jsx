@@ -60,16 +60,16 @@ export default function ReceiverForm({
         {/* Connection Section */}
         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
           <h2 className="text-3xl font-bold text-white text-center mb-8">
-            📥 Receive Files
+             Receive Files
           </h2>
 
           {/* QR Scanner Section */}
           <div className="text-center mb-8">
             <button
               onClick={handleQRReqButton}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-transparent"
+              className="bg-gradient-to-r from-red-400 to-yellow-700 hover:from-red-500 hover:to-yellow-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-transparent"
             >
-              {wantsQR ? '📷 Close Scanner' : '📷 Open QR Scanner'}
+              {wantsQR ? ' Close Scanner' : ' Open QR Scanner'}
             </button>
 
             {wantsQR && (
@@ -92,7 +92,7 @@ export default function ReceiverForm({
                 type="text"
                 value={conId}
                 onChange={updateConId}
-                className="w-full max-w-md px-6 py-4 rounded-xl border-2 border-white/30 bg-white/10 text-white text-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-white/50"
+                className="w-full max-w-md px-6 py-4 rounded-xl border-2 border-white/30 bg-white/10 text-white text-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-white/50"
                 placeholder="Enter Connection ID"
               />
             </div>
@@ -100,9 +100,9 @@ export default function ReceiverForm({
             <div className="text-center">
               <button
                 onClick={connectToSender}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent"
+                className="bg-gradient-to-r from-red-400 to-yellow-700 hover:from-red-500 hover:to-yellow-800 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-transparent"
               >
-                🔗 Connect
+                 Connect
               </button>
             </div>
           </div>
@@ -111,11 +111,11 @@ export default function ReceiverForm({
           {sender && dataChOpen && (
             <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg text-center">
               <p className="text-green-200 font-semibold mb-3">
-                ✅ Connected to sender: {sender}
+                 Connected to sender: {sender}
               </p>
               <button
                 onClick={close}
-                className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-transparent text-sm"
+                className="bg-gradient-to-r from-red-400 to-yellow-700 hover:from-red-500 hover:to-yellow-800 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 focus:ring-offset-transparent text-sm"
               >
                 🔌 Disconnect
               </button>
@@ -125,7 +125,7 @@ export default function ReceiverForm({
           {count > 0 && !dataChOpen && (
             <div className="mt-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg text-center">
               <p className="text-yellow-200">
-                ⏳ Establishing connection... Please wait
+                 Establishing connection... Please wait
               </p>
             </div>
           )}
