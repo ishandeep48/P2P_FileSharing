@@ -447,11 +447,11 @@ function App() {
       { urls: "stun:stun1.l.google.com:19302" },
       { urls: "stun:stun2.l.google.com:19302" },
       { urls: "stun:stun.services.mozilla.com" },
-      // {
-      //   urls: import.meta.env.VITE_TURN_SERVER,
-      //   username: import.meta.env.VITE_TURN_USERNAME,
-      //   credential: import.meta.env.VITE_TURN_PASSWORD,
-      // },
+      {
+        urls: import.meta.env.VITE_TURN_SERVER,
+        username: import.meta.env.VITE_TURN_USERNAME,
+        credential: import.meta.env.VITE_TURN_PASSWORD,
+      },
     ],
     // Optimized WebRTC configuration for better performance
     iceCandidatePoolSize: 10,
