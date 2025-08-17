@@ -52,13 +52,13 @@ function App() {
 
   const logConnectionType = useCallback(async () => {
     if (!peerRef.current || peerRef.current.connectionState !== "connected") {
-      console.log("Peer connection not ready for stats");
+      // console.log("Peer connection not ready for stats");
       return;
     }
 
     try {
       const stats = await peerRef.current.getStats();
-      console.log(Array.from(stats.values()));
+      // console.log(Array.from(stats.values()));
       // Modern browsers return a Map, older ones return RTCStatsReport
       const statsIterable = stats.values
         ? stats.values()
@@ -88,31 +88,31 @@ function App() {
               : "Direct P2P";
 
           console.group("WebRTC Connection Details");
-          console.log(`Connection Type: ${connectionType}`);
-          console.log("Local Candidate:", {
-            type: localCandidate.candidateType,
-            protocol: localCandidate.protocol,
-            address: `${localCandidate.ip || localCandidate.address}:${
-              localCandidate.port
-            }`,
-            networkType: localCandidate.networkType,
-          });
+          // console.log(`Connection Type: ${connectionType}`);
+          // console.log("Local Candidate:", {
+          //   type: localCandidate.candidateType,
+          //   protocol: localCandidate.protocol,
+          //   address: `${localCandidate.ip || localCandidate.address}:${
+          //     localCandidate.port
+          //   }`,
+          //   networkType: localCandidate.networkType,
+          // });
 
           if (remoteCandidate) {
-            console.log("Remote Candidate:", {
-              type: remoteCandidate.candidateType,
-              protocol: remoteCandidate.protocol,
-              address: `${remoteCandidate.ip || remoteCandidate.address}:${
-                remoteCandidate.port
-              }`,
-            });
+            // console.log("Remote Candidate:", {
+            //   type: remoteCandidate.candidateType,
+            //   protocol: remoteCandidate.protocol,
+            //   address: `${remoteCandidate.ip || remoteCandidate.address}:${
+            //     remoteCandidate.port
+            //   }`,
+            // });
           }
 
-          console.log("Transport:", {
-            bytesSent: report.bytesSent,
-            bytesReceived: report.bytesReceived,
-            currentRoundTripTime: report.currentRoundTripTime,
-          });
+          // console.log("Transport:", {
+          //   bytesSent: report.bytesSent,
+          //   bytesReceived: report.bytesReceived,
+          //   currentRoundTripTime: report.currentRoundTripTime,
+          // });
           console.groupEnd();
         }
       }
@@ -122,7 +122,7 @@ function App() {
   }, []);
   const dataChannelEvents = () => {
     dataChannel.current.onopen = () => {
-      console.log("opened data channel");
+      // console.log("opened data channel");
       setDataChOpen(true);
     };
     dataChannel.current.onerror = (error) => {
@@ -131,26 +131,26 @@ function App() {
     };
 
     dataChannel.current.onbufferedamountlow = () => {
-      console.log("Buffer available - ready for more data");
+      // console.log("Buffer available - ready for more data");
     };
   };
   const senderDataChannelEvents = () => {
     dataChannel.current.bufferedAmountLowThreshold = 128 * 1024;
     dataChannel.current.onmessage = async (event) => {
       if (typeof event.data == "string" && event.data == "__EOF_ACK__") {
-        console.log("EOF ACK Received ");
+        // console.log("EOF ACK Received ");
         // dataChannel.current.close();
       } else if (typeof event.data == "string") {
         const parsedData = JSON.parse(event.data);
         const { status } = parsedData;
-        console.log(`status is ${status}`);
-        console.log(parsedData);
+        // console.log(`status is ${status}`);
+        // console.log(parsedData);
         if (status) {
           canSendData.current = true;
-          console.log(canSendData.current);
+          // console.log(canSendData.current);
         } else if (!status) {
           canSendData.current = false;
-          console.log(canSendData.current);
+          // console.log(canSendData.current);
         }
       }
     };
@@ -160,7 +160,7 @@ function App() {
 
     const askForLocation = async () => {
       try {
-        console.log("ask for location");
+        // console.log("ask for location");
         let ext = fileNameRef.current.split(".").pop();
         fileHandle = await window.showSaveFilePicker({
           suggestedName: fileNameRef.current,
@@ -172,15 +172,15 @@ function App() {
           ],
         });
         writableStream.current = await fileHandle.createWritable();
-        console.log("gonna send report from receiver to sender");
+        // console.log("gonna send report from receiver to sender");
         const reportMessage = {
           status: true,
         };
         const sentData = JSON.stringify(reportMessage);
         dataChannel.current.send(sentData);
-        console.log("sent report to sender ", sentData);
+        // console.log("sent report to sender ", sentData);
       } catch (err) {
-        console.log("User closed the box");
+        // console.log("User closed the box");
         setIsReadyToDownload(false);
         if (dataChannel.current && dataChannel.current.readyState === "open") {
           const reportMessage = {
@@ -188,7 +188,7 @@ function App() {
           };
           const sentData = JSON.stringify(reportMessage);
           dataChannel.current.send(sentData);
-          console.log("Sent cancellation report to sender");
+          // console.log("Sent cancellation report to sender");
         }
       }
     };
@@ -208,8 +208,8 @@ function App() {
         setDataChOpen(true);
         lastChunkTimeRef.current = Date.now();
         lastBytesReceivedRef.current = 0;
-        console.log("data channel opened for transfer");
-        console.log(dataChannel.current.readyState);
+        // console.log("data channel opened for transfer");
+        // console.log(dataChannel.current.readyState);
       };
 
       // ---------------------------------------------------s
@@ -235,15 +235,15 @@ function App() {
               lastUpdateTimeRef.current = 0;
               lastUpdateTransferRef.current = 0;
 
-              console.log("metadata received");
+              // console.log("metadata received");
               setShowApprove(true);
-              console.log("receiving and saving to ", fileNameRef.current);
+              // console.log("receiving and saving to ", fileNameRef.current);
             } catch (e) {
               console.warn("Error parsing metadata:", e);
             }
           }
         } else if (typeof event.data == "string" && event.data == "__EOF__") {
-          console.log("EOF Received, closing stream");
+          // console.log("EOF Received, closing stream");
           if (writableStream.current) {
             await writableStream.current.close();
           }
@@ -266,10 +266,10 @@ function App() {
           };
           const sentData = JSON.stringify(reportMessage);
           dataChannel.current.send(sentData);
-          console.log("sent report to sender to not send without permission");
+          // console.log("sent report to sender to not send without permission");
           return;
         } else if (event.data && writableStream.current) {
-          console.log("receiving file data");
+          // console.log("receiving file data");
 
           await writableStream.current.write(event.data);
           const now = Date.now();
@@ -300,7 +300,7 @@ function App() {
       // --------------------------------------
       dataChannel.current.onclose = async () => {
         generateNewId();
-        console.log("Data Channel is closed");
+        // console.log("Data Channel is closed");
         setDataChOpen(false);
       };
     };
@@ -311,7 +311,7 @@ function App() {
     socketRef.current.on("wants-to-connect", async (data) => {
       const { who } = data;
       remoteSocketID.current = who;
-      console.log(`receiver is ${who}`);
+      // console.log(`receiver is ${who}`);
       dataChannel.current = peerRef.current.createDataChannel("file-transfer", {
         ordered: true, // Faster than ordered delivery
         maxRetransmits: 3, // Disable retransmissions for maximum speed
@@ -329,7 +329,7 @@ function App() {
             candidate: event.candidate,
             to: who,
           });
-          console.log("emitted a candidate ", event.candidate);
+          // console.log("emitted a candidate ", event.candidate);
         } else {
           pendingCandidates.current.push(event.candidate);
         }
@@ -356,12 +356,12 @@ function App() {
             to: from,
             candidate: event.candidate,
           });
-          console.log("sent a candidate to receiver ", event.candidate);
+          // console.log("sent a candidate to receiver ", event.candidate);
         } else {
           pendingCandidates.current.push(event.candidate);
-          console.log(
-            `pushed to pending candidate cause event.cadidate is  ${event.candidate} and `
-          );
+          // console.log(
+          //   `pushed to pending candidate cause event.cadidate is  ${event.candidate} and `
+          // );
         }
       };
       const answer = await peerRef.current.createAnswer();
@@ -372,14 +372,14 @@ function App() {
 
     socketRef.current.on("incoming-answer", async (data) => {
       const { from, offer } = data;
-      console.log(` socket id ${from} se answer receive hua`);
+      // console.log(` socket id ${from} se answer receive hua`);
       await peerRef.current.setRemoteDescription(offer);
       setSignalState(true);
       pendingCandidates.current.forEach(async (candidate) => {
         try {
           await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-          console.log("adding candidate ", candidate);
-          console.log("ice state is ", peerRef.current.iceGatheringState);
+          // console.log("adding candidate ", candidate);
+          // console.log("ice state is ", peerRef.current.iceGatheringState);
         } catch (err) {
           console.error("Error adding pending candidate (sender):", err);
         }
@@ -393,15 +393,15 @@ function App() {
           );
           senderDataChannelEvents();
           if (dataChannel.current.readyState == "open") {
-            console.log("aakhir me data channel open hua");
+            // console.log("aakhir me data channel open hua");
           } else {
-            console.log("ab b n hua");
+            // console.log("ab b n hua");
           }
         }
       };
       dataChannel.current.onclose = () => {
         generateNewId();
-        console.log("closed data channel");
+        // console.log("closed data channel");
         setDataChOpen(false);
       };
     });
@@ -410,30 +410,30 @@ function App() {
         peerConnection.getStats().then((stats) => {
           stats.forEach((report) => {
             if (report.type === "candidate-pair" && report.selected) {
-              console.log(
-                "Connection type:",
-                report.localCandidate.candidateType === "relay"
-                  ? "TURN relay"
-                  : "Direct P2P"
-              );
+              // console.log(
+              //   "Connection type:",
+              //   report.localCandidate.candidateType === "relay"
+              //     ? "TURN relay"
+              //     : "Direct P2P"
+              // );
             }
           });
         });
       }
     });
     socketRef.current.on("ice-candidate", async (data) => {
-      console.log(
-        `received ice candidate from server and the candidate is ${data.candidate}`
-      );
+      // console.log(
+      //   `received ice candidate from server and the candidate is ${data.candidate}`
+      // );
       const { candidate } = data;
       if (!peerRef.current.remoteDescription) {
         pendingCandidates.current.push(candidate);
-        console.log("pushing to pending");
+        // console.log("pushing to pending");
         return;
       }
       try {
         await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("bina pending me bheje add kara");
+        // console.log("bina pending me bheje add kara");
       } catch (err) {
         console.error("error addind candidate  ", err);
       }
@@ -472,19 +472,19 @@ function App() {
 
     // Socket connection event handlers
     socketRef.current.on("connect", () => {
-      console.log("Connected to socket server");
+      // console.log("Connected to socket server");
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);
-      console.log("Socket connected state set to true");
-      console.log("Socket connected property:", socketRef.current.connected);
+      // console.log("Socket connected state set to true");
+      // console.log("Socket connected property:", socketRef.current.connected);
     });
 
     socketRef.current.on("disconnect", () => {
-      console.log("Disconnected from socket server");
+      // console.log("Disconnected from socket server");
       setSocketConnected(false);
       setIsSocket(false);
-      console.log("Socket connected state set to false");
+      // console.log("Socket connected state set to false");
     });
 
     socketRef.current.on("connect_error", (error) => {
@@ -495,11 +495,11 @@ function App() {
     });
 
     socketRef.current.on("reconnect", (attemptNumber) => {
-      console.log(
-        "Reconnected to socket server after",
-        attemptNumber,
-        "attempts"
-      );
+      // console.log(
+      //   "Reconnected to socket server after",
+      //   attemptNumber,
+      //   "attempts"
+      // );
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);
@@ -516,7 +516,7 @@ function App() {
 
     // Check if socket is already connected
     if (socketRef.current.connected) {
-      console.log("Socket already connected on mount");
+      // console.log("Socket already connected on mount");
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);
@@ -543,13 +543,13 @@ function App() {
   }, []);
   // ----------------------------------------------------------------------------
   const uploadFile = useCallback(async (file) => {
-    console.log("test 2");
+    // console.log("test 2");
     if (!dataChannel.current || dataChannel.current.readyState !== "open") {
       console.error("Data Channel has not been initialised!!");
       return;
     }
-    console.log("test 3");
-    console.log(dataChannel.current.readyState);
+    // console.log("test 3");
+    // console.log(dataChannel.current.readyState);
     const MAX_BUFFERED_AMOUNT = 15 * 1024 * 1024;
     const CHUNK_SIZE = 256 * 1024;
     const THROTTLE_DELAY = 5;
@@ -575,7 +575,7 @@ function App() {
       // startTimeRef.current = Date.now();
       lastSenderChunkTimeRef.current = Date.now();
       lastSenderBytesSentRef.current = 0;
-      console.log("sent metadata");
+      // console.log("sent metadata");
       await new Promise((res) => {
         const check = () => {
           if (canSendData.current) {
@@ -594,7 +594,7 @@ function App() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          console.log("sending EOF. the real success");
+          // console.log("sending EOF. the real success");
           setTransferCompletion(100);
           dataChannel.current.send("__EOF__");
           break;
@@ -640,9 +640,9 @@ function App() {
           }
         }
       }
-      console.log("file sent successfully");
+      // console.log("file sent successfully");
     } else {
-      console.log("data channel is closed atp (before sharing anything) ");
+      // console.log("data channel is closed atp (before sharing anything) ");
     }
   }, []);
   // ----------------------------------------------------------------------
@@ -650,7 +650,7 @@ function App() {
     if (wantsClose) {
       try {
         dataChannel.current.close();
-        console.log("data channel close called");
+        // console.log("data channel close called");
       } catch (err) {
         console.error("got error ", err);
       }
@@ -716,18 +716,18 @@ function App() {
     };
     // Set up socket connection event handlers for the new socket
     socketRef.current.on("connect", () => {
-      console.log("Connected to socket server (generateNewId)");
+      // console.log("Connected to socket server (generateNewId)");
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);
-      console.log("Socket connected state set to true (generateNewId)");
+      // console.log("Socket connected state set to true (generateNewId)");
     });
 
     socketRef.current.on("disconnect", () => {
-      console.log("Disconnected from socket server (generateNewId)");
+      // console.log("Disconnected from socket server (generateNewId)");
       setSocketConnected(false);
       setIsSocket(false);
-      console.log("Socket connected state set to false (generateNewId)");
+      // console.log("Socket connected state set to false (generateNewId)");
     });
 
     socketRef.current.on("connect_error", (error) => {
@@ -738,11 +738,11 @@ function App() {
     });
 
     socketRef.current.on("reconnect", (attemptNumber) => {
-      console.log(
-        "Reconnected to socket server after",
-        attemptNumber,
-        "attempts (generateNewId)"
-      );
+      // console.log(
+      //   "Reconnected to socket server after",
+      //   attemptNumber,
+      //   "attempts (generateNewId)"
+      // );
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);
@@ -760,7 +760,7 @@ function App() {
 
     // Check if socket is already connected
     if (socketRef.current.connected) {
-      console.log("Socket already connected on generateNewId");
+      // console.log("Socket already connected on generateNewId");
       setSocketConnected(true);
       setSocketError(false);
       setIsSocket(true);

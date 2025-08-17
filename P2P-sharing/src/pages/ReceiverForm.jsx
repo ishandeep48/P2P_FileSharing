@@ -25,7 +25,7 @@ export default function ReceiverForm({
   const connectViaQR = (data) => {
     connectTO(data[0].rawValue);
     setSender(data[0].rawValue);
-    console.log('data to via qr is ', data[0].rawValue);
+    // console.log('data to via qr is ', data[0].rawValue);
     setWantsQR(false);
   };
 

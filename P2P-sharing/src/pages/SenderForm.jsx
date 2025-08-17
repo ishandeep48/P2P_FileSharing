@@ -18,7 +18,7 @@ export default function SenderForm({
   socketConnected,
   socketError
 }) {
-  console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
+  // console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [notification, setNotification] = useState(null);
