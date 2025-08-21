@@ -84,7 +84,7 @@ function Home() {
                     {/* Footer Note */}
                     <div className="mt-16 text-white/60 text-sm">
                         <p>
-                            Built with ❤️ for seamless file sharing. Transfer rates depend on your network connection, not server performance.
+                            Transfer rates depend on your network connection, not server performance.
                         </p>
                     </div>
                 </div>
