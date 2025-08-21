@@ -14,13 +14,12 @@ A modern, beautiful peer-to-peer file sharing application with flowing particles
 
 ### ⚡ Performance Improvements
 - **Optimized WebRTC Configuration**: Better ICE servers and connection settings
-- **Improved Chunk Size**: Increased from 256KB to 512KB for faster transfers
+- **Improved Chunk Size**: Increased from 64KB to 256KB for faster transfers ( Works best for chromium browsers )
 - **Enhanced Buffer Management**: Increased buffer size and better flow control
 - **Faster Progress Updates**: More frequent UI updates (50ms intervals)
 - **Optimized Socket.IO**: WebSocket-only transport with better ping settings
 
 ### 🔧 Technical Enhancements
-- **Better Error Handling**: Comprehensive error handling with user-friendly messages
 - **Loading States**: Beautiful loading spinners and progress indicators
 - **Notifications**: Toast notifications for user feedback
 - **Connection Status**: Real-time connection status indicators
@@ -86,13 +85,13 @@ A modern, beautiful peer-to-peer file sharing application with flowing particles
 ## 🎯 Performance Optimizations
 
 ### Transfer Speed Improvements:
-- **Chunk Size**: Increased from 256KB to 512KB
-- **Buffer Size**: Increased from 13MB to 16MB
+- **Chunk Size**: Increased from 64KB to 256KB
+- **Buffer Size**: Increased to 15MB
 - **Throttle Delay**: Reduced from 10ms to 5ms
 - **Progress Updates**: More frequent (50ms vs 100ms)
 
 ### WebRTC Enhancements:
-- **Multiple STUN Servers**: Added Google's STUN servers for better connectivity
+- **Multiple STUN Servers**: Added Google's and Mozilla's STUN servers for better connectivity
 - **ICE Configuration**: Optimized ICE candidate pool and bundle policy
 - **Connection Tracking**: Better connection state management
 
@@ -115,15 +114,8 @@ A modern, beautiful peer-to-peer file sharing application with flowing particles
 - **Node.js**: Server runtime
 - **Express**: Web framework
 - **Socket.IO**: Real-time communication server
-- **HTTPS**: Secure connections
 
 ## 🎨 Design System
-
-### Colors:
-- **Primary**: Blue gradient (#667eea to #764ba2)
-- **Success**: Green gradient (#10b981 to #059669)
-- **Warning**: Yellow (#f59e0b)
-- **Error**: Red (#ef4444)
 
 ### Components:
 - **Glass Cards**: Translucent backgrounds with backdrop blur
@@ -136,29 +128,15 @@ A modern, beautiful peer-to-peer file sharing application with flowing particles
 - **End-to-End Encryption**: Files are transferred directly between peers
 - **No Server Storage**: Files never touch the server
 - **Secure WebRTC**: Encrypted peer-to-peer connections
-- **HTTPS**: Secure server communication
 
 ## 📊 Performance Metrics
 
-- **Transfer Speed**: Up to 2x faster than previous version
+- **Transfer Speed**: Up to 2x faster than previous version ( Not when connected to RELAY )
 - **Connection Time**: Reduced connection establishment time
 - **UI Responsiveness**: 60fps animations and smooth interactions
-- **Memory Usage**: Optimized for better performance
+- **Memory Usage**: Optimized for better performance on Chromium based browsers
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ for seamless file sharing
-- Special thanks to the WebRTC and Socket.IO communities
-- Inspired by modern UI/UX design principles
+*P2P_FileSharing  © 2025 by Ishan Deep is licensed under CC BY-NC-ND 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-nd/4.0/*
