@@ -1,8 +1,14 @@
-import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useP2P } from '../context/useP2P';
 
-const ConnectionCard = ({ connectionId, isConnected, onGenerateNewId, socketConnected, socketError }) => {
-  console.log('ConnectionCard Debug:', { socketConnected, socketError, isConnected, connectionId });
+const ConnectionCard = () => {
+  const {
+    connectionId,
+    dataChOpen: isConnected,
+    generateNewId: onGenerateNewId,
+    socketConnected,
+  } = useP2P();
+
   return (
     <div className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
       <div className="text-center">
@@ -18,8 +24,8 @@ const ConnectionCard = ({ connectionId, isConnected, onGenerateNewId, socketConn
         {connectionId && (
           <div className="mb-6">
             <div className="bg-white p-4 rounded-lg shadow-lg inline-block">
-              <QRCodeCanvas 
-                value={connectionId} 
+              <QRCodeCanvas
+                value={connectionId}
                 size={200}
                 level="H"
                 includeMargin={true}
@@ -37,7 +43,7 @@ const ConnectionCard = ({ connectionId, isConnected, onGenerateNewId, socketConn
               Server: {socketConnected ? 'Online' : 'Offline'}
             </span>
           </div>
-          
+
           {/* Peer Connection Status */}
           <div className="flex items-center justify-center">
             <div className={`w-3 h-3 rounded-full mr-2 ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>

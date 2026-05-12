@@ -1,17 +1,20 @@
-import React, { useEffect, useState ,useRef} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import ProgressBar from '../components/ProgressBar';
+import { useP2P } from '../context/useP2P';
 
-export default function ReceiverForm({
-  connectTO,
-  downloadURL,
-  dataChOpen,
-  showApprove,
-  setIsReadyToDownload,
-  transferCompletion,
-  speed,
-  setWantsClose
-}) {
+export default function ReceiverForm() {
+  const {
+    connectTO,
+    dataChOpen,
+    showApprove,
+    setIsReadyToDownload,
+    transferCompletion,
+    receiverSpeed: speed,
+    setWantsClose,
+    transferError,
+  } = useP2P();
+
   const [count, setCount] = useState(0);
   const [conId, setConId] = useState('');
   const [sender, setSender] = useState();
@@ -25,18 +28,18 @@ export default function ReceiverForm({
   const connectViaQR = (data) => {
     connectTO(data[0].rawValue);
     setSender(data[0].rawValue);
-    // console.log('data to via qr is ', data[0].rawValue);
     setWantsQR(false);
   };
 
-  useEffect(()=>{
-    if(showApprove && approveRef.current){
+  useEffect(() => {
+    if (showApprove && approveRef.current) {
       approveRef.current.scrollIntoView({
-        behavior:'smooth',
-        block:'center'
+        behavior: 'smooth',
+        block: 'center'
       });
     }
-  },[showApprove])
+  }, [showApprove]);
+
   const updateConId = (evt) => {
     setConId(evt.target.value);
   };
@@ -133,7 +136,7 @@ export default function ReceiverForm({
 
         {/* File Approval Section */}
         {showApprove && (
-          <div ref = { approveRef}className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
+          <div ref={approveRef} className="bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
             <h3 className="text-2xl font-bold text-white text-center mb-6">
               📄 Incoming File Transfer
             </h3>
@@ -151,6 +154,13 @@ export default function ReceiverForm({
                 ❌ Disconnect
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Transfer Error */}
+        {transferError && (
+          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 text-center">
+            <p className="text-red-200 font-semibold">{transferError}</p>
           </div>
         )}
 

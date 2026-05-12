@@ -1,6 +1,7 @@
-import React from 'react';
+import { useP2P } from '../context/useP2P';
 
-const ServerWarning = ({ socketError, socketConnected }) => {
+const ServerWarning = () => {
+  const { socketError, socketConnected } = useP2P();
   // Only show warning when there's an error AND not connected
   if (!socketError || socketConnected) return null;
 
@@ -20,7 +21,7 @@ const ServerWarning = ({ socketError, socketConnected }) => {
             </p>
           </div>
         </div>
-        
+
         <div className="mt-3 pt-3 border-t border-white/20">
           <div className="flex items-center justify-between text-xs">
             <span className="opacity-75">Status: {socketConnected ? 'Connected' : 'Disconnected'}</span>

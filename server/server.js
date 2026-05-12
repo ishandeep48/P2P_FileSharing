@@ -1,15 +1,20 @@
 const express = require('express');
-const { createServer } = require('http');
+const { createServer: createHttpServer } = require('http');
+const { createServer: createHttpsServer } = require('https');
 const app = express();
-const { readFileSync } = require('fs');
+const { readFileSync, existsSync } = require('fs');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-// const options = {
-//     key: readFileSync('../P2P-sharing/key.pem'),
-//     cert: readFileSync('../P2P-sharing/cert.pem')
-// };
-// const server = createServer(options, app);
-const server = createServer(app);
+const keyPath = path.join(__dirname, '..', 'P2P-sharing', 'key.pem');
+const certPath = path.join(__dirname, '..', 'P2P-sharing', 'cert.pem');
+const useHttps = existsSync(keyPath) && existsSync(certPath);
+
+const server = useHttps
+    ? createHttpsServer({ key: readFileSync(keyPath), cert: readFileSync(certPath) }, app)
+    : createHttpServer(app);
+
+console.log(`Starting ${useHttps ? 'HTTPS' : 'HTTP'} server`);
 const cors = require('cors');
 const { Server } = require('socket.io');
 // const { create } = require('domain');

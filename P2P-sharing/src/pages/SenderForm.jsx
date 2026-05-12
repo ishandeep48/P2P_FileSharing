@@ -1,39 +1,35 @@
-import React, { useState,useRef,useLayoutEffect,useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ConnectionCard from "../components/ConnectionCard";
 import FileUpload from "../components/FileUpload";
 import ProgressBar from "../components/ProgressBar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Notification from "../components/Notification";
 import ServerWarning from "../components/ServerWarning";
+import { useP2P } from "../context/useP2P";
 
-export default function SenderForm({ 
-  connectionId, 
-  generateNewId, 
-  isSocket, 
-  uploadFile, 
-  dataChOpen, 
-  transferCompletion, 
-  speed,
-  setWantsClose,
-  socketConnected,
-  socketError
-}) {
-  // console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
+export default function SenderForm() {
+  const {
+    uploadFile,
+    dataChOpen,
+    transferCompletion,
+    speed,
+  } = useP2P();
+
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [notification, setNotification] = useState(null);
-  const conCardRef = useRef(null)
-  const uploadRef = useRef()
-  const progressRef = useRef()
+  const conCardRef = useRef(null);
+  const uploadRef = useRef();
+  const progressRef = useRef();
   const handleFileSelect = (selectedFile) => {
     setFile(selectedFile);
   };
-let changed = false;
+  let changed = false;
   const handleSubmitFile = async () => {
     if (file && dataChOpen) {
       setIsUploading(true);
       setNotification({ message: 'Starting file transfer...', type: 'info' });
-      
+
       try {
         await uploadFile(file);
         setNotification({ message: 'File sent successfully!', type: 'success' });
@@ -45,54 +41,48 @@ let changed = false;
     }
   };
 
-  useLayoutEffect(()=>{
-    if(conCardRef.current){
+  useLayoutEffect(() => {
+    if (conCardRef.current) {
       conCardRef.current.scrollIntoView({
-        behavior:'smooth',
-        block:'center'
+        behavior: 'smooth',
+        block: 'center'
       });
     }
-  },[])
-  useEffect(()=>{
-    if(dataChOpen && uploadRef.current){
+  }, []);
+  useEffect(() => {
+    if (dataChOpen && uploadRef.current) {
       uploadRef.current.scrollIntoView({
-        behavior:'smooth',
-        block:'center'
-      })
-    }
-  },[dataChOpen])
-
-  useEffect(()=>{
-    if(transferCompletion>0 && progressRef.current && !changed){
-      progressRef.current.scrollIntoView({
-        behavior:'smooth',
-        block:'center'
+        behavior: 'smooth',
+        block: 'center'
       });
-      changed=(changed?true:true);
     }
-  },[transferCompletion])
+  }, [dataChOpen]);
+
+  useEffect(() => {
+    if (transferCompletion > 0 && progressRef.current && !changed) {
+      progressRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      changed = (changed ? true : true);
+    }
+  }, [transferCompletion]);
   return (
     <div className="min-h-screen py-16 px-4">
       {/* Server Warning */}
-      <ServerWarning socketError={socketError} socketConnected={socketConnected} />
-      
+      <ServerWarning />
+
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Connection Card */}
-        <div ref = {conCardRef}>
-        <ConnectionCard
-          connectionId={connectionId}
-          isConnected={dataChOpen}
-          onGenerateNewId={generateNewId}
-          socketConnected={socketConnected}
-          socketError={socketError}
-        /></div>
+        <div ref={conCardRef}>
+          <ConnectionCard />
+        </div>
 
         {/* File Upload Section */}
         <div className="space-y-6" ref={uploadRef}>
           <FileUpload
             onFileSelect={handleFileSelect}
             selectedFile={file}
-            isConnected={dataChOpen}
           />
 
           {/* Send Button */}
@@ -137,14 +127,14 @@ let changed = false;
 
         {/* Progress Bar */}
         <div ref={progressRef}>
-        {(transferCompletion > 0 || speed > 0) && (
-          <ProgressBar
-            progress={transferCompletion}
-            speed={speed}
-            fileName={file?.name}
-            fileSize={file?.size}
-          />
-        )}
+          {(transferCompletion > 0 || speed > 0) && (
+            <ProgressBar
+              progress={transferCompletion}
+              speed={speed}
+              fileName={file?.name}
+              fileSize={file?.size}
+            />
+          )}
         </div>
         {/* Notification */}
         {notification && (

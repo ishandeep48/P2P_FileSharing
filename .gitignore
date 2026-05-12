@@ -3,3 +3,7 @@ node_modules
 P2P-sharing/node_modules
 P2P-sharing/cert.pem
 P2P-sharing/key.pem
+.claude/
+P2P-sharing/src.before-refactor.bak/
+P2P-sharing/.env.local
+P2P-sharing/.env.*.local
