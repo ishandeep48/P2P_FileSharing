@@ -27,6 +27,7 @@ function App() {
   const [wantsClose, setWantsClose] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [socketError, setSocketError] = useState(false);
+  const [transferError, setTransferError] = useState(null);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef = useRef();
@@ -203,6 +204,7 @@ function App() {
     };
     peerRef.current.ondatachannel = (event) => {
       dataChannel.current = event.channel;
+      dataChannel.current.binaryType = "arraybuffer";
       receivedData.current = [];
       dataChannel.current.onopen = () => {
         setDataChOpen(true);
@@ -244,11 +246,35 @@ function App() {
           }
         } else if (typeof event.data == "string" && event.data == "__EOF__") {
           // console.log("EOF Received, closing stream");
+          const expected = fileSizeRef.current;
+          const actual = byteSentRef.current;
+          const mismatch = expected != null && actual !== expected;
+
           if (writableStream.current) {
-            await writableStream.current.close();
+            if (mismatch && typeof writableStream.current.abort === "function") {
+              try {
+                await writableStream.current.abort();
+              } catch (err) {
+                console.error("Error aborting writable stream:", err);
+              }
+            } else {
+              await writableStream.current.close();
+            }
           }
-          setTransferCompletion(100);
-          dataChannel.current.send("__EOF_ACK__");
+
+          if (mismatch) {
+            console.error(
+              `Transfer size mismatch: expected ${expected} bytes, received ${actual} bytes`
+            );
+            setTransferError(
+              `Transfer failed: expected ${expected} bytes, got ${actual}`
+            );
+            setTransferCompletion(0);
+          } else {
+            setTransferCompletion(100);
+            setTransferError(null);
+            dataChannel.current.send("__EOF_ACK__");
+          }
 
           // Reset state after file transfer
           isMetaDataReceivedRef.current = false;
@@ -313,14 +339,10 @@ function App() {
       remoteSocketID.current = who;
       // console.log(`receiver is ${who}`);
       dataChannel.current = peerRef.current.createDataChannel("file-transfer", {
-        ordered: true, // Faster than ordered delivery
-        maxRetransmits: 3, // Disable retransmissions for maximum speed
-        // maxPacketLifeTime: null, // Alternative to maxRetransmits: 0
-        protocol: "udp", // Lower latency than TCP
-        // negotiated: true, // Skip SDP negotiation for faster setup
-        // id: 1, // Required when negotiated: true
-        priority: "high", // Prioritize this channel
+        ordered: true,
+        priority: "high",
       });
+      dataChannel.current.binaryType = "arraybuffer";
       dataChannelEvents();
       senderDataChannelEvents();
       peerRef.current.onicecandidate = (event) => {
@@ -385,20 +407,6 @@ function App() {
         }
       });
 
-      peerRef.current.onicegatheringstatechange = () => {
-        if (peerRef.current.iceGatheringState == "complete") {
-          dataChannel.current = peerRef.current.createDataChannel(
-            "file-transfer",
-            { ordered: true }
-          );
-          senderDataChannelEvents();
-          if (dataChannel.current.readyState == "open") {
-            // console.log("aakhir me data channel open hua");
-          } else {
-            // console.log("ab b n hua");
-          }
-        }
-      };
       dataChannel.current.onclose = () => {
         generateNewId();
         // console.log("closed data channel");
@@ -666,6 +674,7 @@ function App() {
     setShowApprove(false);
     setTransferCompletion(0);
     setSpeed(0);
+    setTransferError(null);
 
     startTimeRef.current = null;
     isMetaDataReceivedRef.current = false;
@@ -801,6 +810,7 @@ function App() {
               transferCompletion={transferCompletion}
               speed={receiverSpeed}
               setWantsClose={setWantsClose}
+              transferError={transferError}
             />
           }
         />
