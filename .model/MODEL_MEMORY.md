@@ -22,7 +22,7 @@ P2P_FileSharing/
 
 - **Frontend**: React 19, Vite, Tailwind CSS, react-router-dom
 - **Backend**: Node.js, Express, Socket.IO (signaling server)
-- **P2P Communication**: WebRTC (RTCPeerConnection), simple-peer
+- **P2P Communication**: WebRTC (RTCPeerConnection, raw API)
 - **File Transfer**: File System Access API (WritableStream)
 - **QR Code**: qrcode.react (generation), @yudiel/react-qr-scanner (scanning)
 
@@ -181,7 +181,6 @@ binaryType = "arraybuffer";  // Binary data for chunks
 ### Frontend (P2P-sharing/package.json)
 - react, react-dom, react-router-dom
 - socket.io-client
-- simple-peer (WebRTC wrapper)
 - qrcode.react (QR generation)
 - @yudiel/react-qr-scanner (QR scanning)
 - vite, tailwindcss
