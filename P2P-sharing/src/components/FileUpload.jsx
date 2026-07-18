@@ -1,8 +1,6 @@
-import { useRef, useState } from 'react';
-import { useP2P } from '../context/useP2P';
+import React, { useState, useRef } from 'react';
 
-const FileUpload = ({ onFileSelect, selectedFile }) => {
-  const { dataChOpen: isConnected } = useP2P();
+const FileUpload = ({ onFileSelect, selectedFile, isConnected }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -60,10 +58,10 @@ const FileUpload = ({ onFileSelect, selectedFile }) => {
           className="hidden"
           disabled={!isConnected}
         />
-
+        
         <div className="space-y-4">
           <div className="text-6xl text-white/60">📁</div>
-
+          
           {selectedFile ? (
             <div className="space-y-2">
               <h3 className="text-white font-semibold text-lg">{selectedFile.name}</h3>
@@ -82,7 +80,7 @@ const FileUpload = ({ onFileSelect, selectedFile }) => {
           )}
         </div>
       </div>
-
+      
       {!isConnected && (
         <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
           <p className="text-yellow-200 text-sm text-center">
