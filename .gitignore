@@ -3,4 +3,4 @@ node_modules
 P2P-sharing/node_modules
 P2P-sharing/cert.pem
 P2P-sharing/key.pem
-MODEL_MEMORY.md
+.model/
