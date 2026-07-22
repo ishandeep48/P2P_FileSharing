@@ -14,12 +14,8 @@ After calling a tool, do not output any further text until you have received the
 
 Use standard OpenAI-style tool calls only. Do not use custom tags.
 
-## Strict Format Rules
+## Model Memory Management
 
-Do not use custom tags like `<|tool_call|>`.
+Always READ `.model/MODEL_MEMORY.md` at the beginning of a session or when context is needed. 
 
-Always use standard OpenAI function calling format.
-
-If you need to run a complex bash command, write it to a file first using the `write` tool, then execute the file using the `bash` tool.
-
-Never output raw bash strings that are longer than one line inside the `bash` tool; use a script file instead.
+When a significant change (architectural decision, new feature implementation, major refactor, or critical bug fix) is completed, you MUST update `.model/MODEL_MEMORY.md` to reflect the current state of the repository and ensure continuity in future sessions.
