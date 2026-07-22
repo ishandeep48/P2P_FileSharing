@@ -1,9 +1,10 @@
 # Prop Drilling Analysis
 
 ## 📤 Sender Flow
-**Hierarchy:** App.jsx $\rightarrow$ Sender.jsx $\rightarrow$ SenderForm.jsx
+**Hierarchy:** `App.jsx` $\rightarrow$ `Sender.jsx` $\rightarrow$ `SenderForm.jsx` $\rightarrow$ (Various UI Components)
 
-### Props passed from App.jsx to Sender.jsx:
+### Stage 1: App.jsx $\rightarrow$ Sender.jsx
+The following props are passed from the root to the Sender page wrapper:
 - `connectionId`
 - `generateNewId`
 - `isSocket`
@@ -15,7 +16,8 @@
 - `socketConnected`
 - `socketError`
 
-### Props passed from Sender.jsx to SenderForm.jsx:
+### Stage 2: Sender.jsx $\rightarrow$ SenderForm.jsx
+The same set of props is passed through the Sender page to the main form component:
 - `connectionId`
 - `generateNewId`
 - `isSocket`
@@ -27,19 +29,43 @@
 - `socketConnected`
 - `socketError`
 
-### Props passed within SenderForm.jsx to child components:
-- **ServerWarning**: `socketError`, `socketConnected`
-- **ConnectionCard**: `connectionId`, `isConnected` (from `dataChOpen`), `onGenerateNewId` (from `generateNewId`), `socketConnected`, `socketError`
-- **FileUpload**: `onFileSelect`, `selectedFile`, `isConnected` (from `dataChOpen`)
-- **ProgressBar**: `progress` (from `transferCompletion`), `speed`, `fileName`, `fileSize`
-- **Notification**: `message`, `type`, `onClose`
+### Stage 3: SenderForm.jsx $\rightarrow$ Child Components
+The form component further drills or passes down props to its specialized UI components:
+
+#### **1. ServerWarning**
+*   `socketError` (from `SenderForm`)
+*   `socketConnected` (from `SenderForm`)
+
+#### **2. ConnectionCard**
+*   `connectionId` (from `SenderForm`)
+*   `isConnected` (derived from `dataChOpen` in `SenderForm`)
+*   `onGenerateNewId` (derived from `generateNewId` in `SenderForm`)
+*   `socketConnected` (from `SenderForm`)
+*   `socketError` (from `SenderForm`)
+
+#### **3. FileUpload**
+*   `onFileSelect` (local state setter in `SenderForm`)
+*   `selectedFile` (local state `file` in `SenderForm`)
+*   `isConnected` (derived from `dataChOpen` in `SenderForm`)
+
+#### **4. ProgressBar**
+*   `progress` (derived from `transferCompletion` in `SenderForm`)
+*   `speed` (from `SenderForm`)
+*   `fileName` (derived from local state `file.name` in `SenderForm`)
+*   `fileSize` (derived from local state `file.size` in `SenderForm`)
+
+#### **5. Notification**
+*   `message` (derived from local state `notification.message` in `SenderForm`)
+*   `type` (derived from local state `notification.type` in `SenderForm`)
+*   `onClose` (local setter in `SenderForm`)
 
 ---
 
 ## 📥 Receiver Flow
-**Hierarchy:** App.jsx $\rightarrow$ Receiver.jsx $\rightarrow$ ReceiverForm.jsx
+**Hierarchy:** `App.jsx` $\rightarrow$ `Receiver.jsx` $\rightarrow$ `ReceiverForm.jsx`
 
-### Props passed from App.jsx to Receiver.jsx:
+### Stage 1: App.jsx $\rightarrow$ Receiver.jsx
+The following props are passed from the root to the Receiver page wrapper:
 - `connectTO`
 - `downloadURL`
 - `dataChOpen`
@@ -50,7 +76,8 @@
 - `setWantsClose`
 - `transferError`
 
-### Props passed from Receiver.jsx to ReceiverForm.jsx:
+### Stage 2: Receiver.jsx $\rightarrow$ ReceiverForm.jsx
+The following props are passed through the Receiver page to the main form component:
 - `connectTO`
 - `downloadURL`
 - `dataChOpen`
@@ -60,5 +87,5 @@
 - `speed`
 - `setWantsClose`
 
-### Props passed within ReceiverForm.jsx to child components:
+### Stage 3: ReceiverForm.jsx $\rightarrow$ Child Components
 *(Note: Detailed analysis of ReceiverForm.jsx children would be required for full completeness, but the primary drilling is identified above.)*
