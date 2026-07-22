@@ -1,7 +1,7 @@
 # Prop Drilling Analysis
 
 ## STATUS: COMPLETED (2025-07-23)
-**Solution:** Implemented `P2PContext` with React Context API to eliminate prop drilling.
+**Solution:** Implemented `P2PContext` with React Context API to eliminate ALL prop drilling.
 
 ### Changes Made:
 1. Created `src/context/P2PContext.jsx` - Context provider holding all P2P state + functions
@@ -12,8 +12,9 @@
 6. Updated `ReceiverForm.jsx` - Uses `useP2P()` hook instead of props
 7. Updated `ConnectionCard.jsx` - Now uses `useP2P()` for all props (connectionId, generateNewId, socketConnected, dataChOpen)
 8. Updated `ServerWarning.jsx` - Now uses `useP2P()` for socketError, socketConnected
-9. Updated `ProgressBar.jsx` - Now uses `useP2P()` for progress (transferCompletion), speed
-10. Updated `FileUpload.jsx` - Now uses `useP2P()` for isConnected (dataChOpen)
+9. Updated `ProgressBar.jsx` - Now uses `useP2P()` for progress (transferCompletion), speed, fileName, fileSize
+10. Updated `FileUpload.jsx` - Now uses `useP2P()` for dataChOpen, setFile, selectedFile
+11. Updated `Notification.jsx` - Now uses `useP2P()` for message, type, onClose
 
 ---
 
@@ -58,18 +59,12 @@
 
 ---
 
-## Remaining Props - Cannot Be Moved to Context
+## Final Status: ZERO PROP DRILLING REMAINING
 
-These props are **intentionally kept** as they represent local/ephemeral UI state that would pollute global context if moved.
+All components now consume state directly via `useP2P()` hook. No props are passed between parent and child components for P2P or UI state.
 
-### Local State (SenderForm only):
-| Prop | Component | Reason |
-|------|-----------|--------|
-| `selectedFile` | FileUpload | Temporary file selection, resets on navigation |
-| `onFileSelect` | FileUpload | Callback to update local state |
-| `fileName`, `fileSize` | ProgressBar | Derived from local `file` object |
-
-### Ephemeral Toast State:
-| Prop | Component | Reason |
-|------|-----------|--------|
-| `message`, `type`, `onClose` | Notification | Auto-dismissing, component-specific lifecycle |
+### Architecture:
+- **App.jsx** manages all state (P2P + local UI) and passes it to `<P2PProvider>`
+- **Context Provider** distributes state globally
+- **All Components** (`ConnectionCard`, `ServerWarning`, `FileUpload`, `ProgressBar`, `Notification`) consume only what they need via `useP2P()`
+- **Zero props** passed between parent and child components for data/state
