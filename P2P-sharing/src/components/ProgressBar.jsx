@@ -1,8 +1,8 @@
 import React from 'react';
 import { useP2P } from '../context/P2PContext';
 
-const ProgressBar = ({ fileName, fileSize }) => {
-  const { transferCompletion: progress, speed } = useP2P();
+const ProgressBar = () => {
+  const { transferCompletion: progress, speed, file } = useP2P();
   // Ensure progress is a number and handle edge cases
   const safeProgress = typeof progress === 'number' ? progress : 0;
   const safeSpeed = typeof speed === 'number' ? speed : 0;
@@ -22,11 +22,11 @@ const ProgressBar = ({ fileName, fileSize }) => {
 
   return (
     <div className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
-      {fileName && (
+      {file && (
         <div className="mb-4">
-          <h3 className="text-white font-semibold text-sm truncate">{fileName}</h3>
-          {fileSize && (
-            <p className="text-white/70 text-xs">{formatFileSize(fileSize)}</p>
+          <h3 className="text-white font-semibold text-sm truncate">{file?.name}</h3>
+          {file?.size && (
+            <p className="text-white/70 text-xs">{formatFileSize(file?.size)}</p>
           )}
         </div>
       )}

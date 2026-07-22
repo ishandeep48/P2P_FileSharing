@@ -28,6 +28,8 @@ function App() {
   const [wantsClose, setWantsClose] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [socketError, setSocketError] = useState(false);
+  const [file, setFile] = useState(null);
+  const [notification, setNotification] = useState(null);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef = useRef();
@@ -784,6 +786,10 @@ function App() {
     showApprove,
     setIsReadyToDownload,
     receiverSpeed,
+    file,
+    setFile,
+    notification,
+    setNotification,
   };
 
   return (

@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useP2P } from '../context/P2PContext';
 
-const Notification = ({ message, type = 'info', duration = 5000, onClose }) => {
+const Notification = () => {
+  const { notification: notif, setNotification } = useP2P();
   const [isVisible, setIsVisible] = useState(true);
+  const message = notif?.message || '';
+  const type = notif?.type || 'info';
 
   const typeStyles = {
     success: 'bg-green-500/20 border-green-500/30 text-green-200',
@@ -21,16 +25,16 @@ const Notification = ({ message, type = 'info', duration = 5000, onClose }) => {
     if (duration > 0) {
       const timer = setTimeout(() => {
         setIsVisible(false);
-        onClose?.();
+        setNotification(null);
       }, duration);
 
       return () => clearTimeout(timer);
     }
-  }, [duration, onClose]);
+  }, [duration]);
 
   const handleClose = () => {
     setIsVisible(false);
-    onClose?.();
+    setNotification(null);
   };
 
   if (!isVisible) return null;

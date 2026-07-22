@@ -18,12 +18,14 @@ export default function SenderForm() {
     speed,
     setWantsClose,
     socketConnected,
-    socketError
+    socketError,
+    file,
+    setFile,
+    notification,
+    setNotification
   } = useP2P();
-  // console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
-  const [file, setFile] = useState(null);
+  // console.log("SenderForm Debug:", { socketConnected, socketError, dataChOpen, connectionId });
   const [isUploading, setIsUploading] = useState(false);
-  const [notification, setNotification] = useState(null);
   const conCardRef = useRef(null)
   const uploadRef = useRef()
   const progressRef = useRef()
@@ -81,17 +83,12 @@ let changed = false;
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Connection Card */}
         <div ref = {conCardRef}>
-        <ConnectionCard
-          
-        /></div>
+        <ConnectionCard />
+        </div>
 
         {/* File Upload Section */}
         <div className="space-y-6" ref={uploadRef}>
-          <FileUpload
-            onFileSelect={handleFileSelect}
-            selectedFile={file}
-            
-          />
+          <FileUpload />
 
           {/* Send Button */}
           {file && dataChOpen && (
@@ -136,19 +133,12 @@ let changed = false;
         {/* Progress Bar */}
         <div ref={progressRef}>
         {(transferCompletion > 0 || speed > 0) && (
-          <ProgressBar
-            fileName={file?.name}
-            fileSize={file?.size}
-          />
+          <ProgressBar />
         )}
         </div>
         {/* Notification */}
         {notification && (
-          <Notification
-            message={notification.message}
-            type={notification.type}
-            onClose={() => setNotification(null)}
-          />
+          <Notification />
         )}
       </div>
     </div>

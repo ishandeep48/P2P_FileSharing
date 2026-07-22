@@ -1,6 +1,6 @@
 # Prop Drilling Analysis
 
-## ✅ STATUS: COMPLETED (2025-07-23)
+## STATUS: COMPLETED (2025-07-23)
 **Solution:** Implemented `P2PContext` with React Context API to eliminate prop drilling.
 
 ### Changes Made:
@@ -10,70 +10,66 @@
 4. Updated `Receiver.jsx` - Removed prop drilling, now a pure layout wrapper  
 5. Updated `SenderForm.jsx` - Uses `useP2P()` hook instead of props
 6. Updated `ReceiverForm.jsx` - Uses `useP2P()` hook instead of props
+7. Updated `ConnectionCard.jsx` - Now uses `useP2P()` for all props (connectionId, generateNewId, socketConnected, dataChOpen)
+8. Updated `ServerWarning.jsx` - Now uses `useP2P()` for socketError, socketConnected
+9. Updated `ProgressBar.jsx` - Now uses `useP2P()` for progress (transferCompletion), speed
+10. Updated `FileUpload.jsx` - Now uses `useP2P()` for isConnected (dataChOpen)
 
 ---
 
-## 📤 Sender Flow (Before Refactor)
-**Old Hierarchy:** `App.jsx` $\rightarrow$ `Sender.jsx` $\rightarrow$ `SenderForm.jsx` $\rightarrow$ (Various UI Components)
+## Sender Flow (Before Refactor)
+**Old Hierarchy:** `App.jsx` -> `Sender.jsx` -> `SenderForm.jsx` -> (Various UI Components)
 
 ### Props Drilled (Now via Context):
 - `connectionId`, `generateNewId`, `isSocket`, `uploadFile`
 - `dataChOpen`, `transferCompletion`, `speed`, `setWantsClose`
 - `socketConnected`, `socketError`
 
-### Child Components (Still receive local props - not drilled from App):
-#### **1. ServerWarning**
-*   `socketError`, `socketConnected` (from SenderForm's context)
+### Child Components - Current State:
+#### 1. ServerWarning [FIXED]
+* ~~`socketError`, `socketConnected`~~ -> Now uses `useP2P()` directly (0 props)
 
-#### **2. ConnectionCard**
-*   `connectionId`, `isConnected`, `onGenerateNewId`, `socketConnected`, `socketError`
+#### 2. ConnectionCard [FIXED]
+* ~~`connectionId`, `isConnected`, `onGenerateNewId`, `socketConnected`, `socketError`~~ -> Now uses `useP2P()` directly (0 props)
 
-#### **3. FileUpload**
-*   `onFileSelect`, `selectedFile`, `isConnected` (all local to SenderForm)
+#### 3. FileUpload [PARTIAL]
+* ~~`isConnected`~~ -> Now uses `useP2P()` for dataChOpen
+* `onFileSelect`, `selectedFile` -> Local state in SenderForm, cannot move to global context (temporary UI data)
 
-#### **4. ProgressBar**
-*   `progress`, `speed`, `fileName`, `fileSize` (derived from context/local state)
+#### 4. ProgressBar [FIXED]
+* ~~`progress`, `speed`~~ -> Now uses `useP2P()` directly
+* `fileName`, `fileSize` -> Derived from local `file` object in SenderForm, acceptable as props
 
-#### **5. Notification**
-*   `message`, `type`, `onClose` (all local to SenderForm)
+#### 5. Notification [ACCEPTABLE AS-IS]
+* `message`, `type`, `onClose` -> Purely ephemeral toast state, should never be in global context
 
 ---
 
-## 📥 Receiver Flow (Before Refactor)
-**Old Hierarchy:** `App.jsx` $\rightarrow$ `Receiver.jsx` $\rightarrow$ `ReceiverForm.jsx`
+## Receiver Flow (Before Refactor)
+**Old Hierarchy:** `App.jsx` -> `Receiver.jsx` -> `ReceiverForm.jsx`
 
 ### Props Drilled (Now via Context):
 - `connectTO`, `downloadURL`, `dataChOpen`, `showApprove`
 - `setIsReadyToDownload`, `transferCompletion`, `speed`, `setWantsClose`
 
+### Child Components - Current State:
+#### 1. ProgressBar [FIXED]
+* ~~`progress`, `speed`~~ -> Now uses `useP2P()` directly (0 props)
+
 ---
 
-## 📊 Prop Priority & Grouping
+## Remaining Props - Cannot Be Moved to Context
 
-To optimize refactoring (e.g., moving to Context API), props have been grouped and ranked by their functional priority and impact on the application core.
+These props are **intentionally kept** as they represent local/ephemeral UI state that would pollute global context if moved.
 
-### **Priority 1: Core Transfer & Connection State (Critical)**
-*These are essential for the fundamental P2P operation.*
-- `dataChOpen`: Determines if data can actually be sent/received via WebRTC.
-- `uploadFile`: The primary action that drives the transfer logic.
-- `connectionId`: Essential for peer identification and signaling.
+### Local State (SenderForm only):
+| Prop | Component | Reason |
+|------|-----------|--------|
+| `selectedFile` | FileUpload | Temporary file selection, resets on navigation |
+| `onFileSelect` | FileUpload | Callback to update local state |
+| `fileName`, `fileSize` | ProgressBar | Derived from local `file` object |
 
-### **Priority 2: Signaling & Network Status (High)**
-*These manage the underlying communication layer.*
-- `socketConnected` / `isSocket`: Indicates if the signaling server is reachable.
-- `socketError`: Critical for error handling and user feedback during connection attempts.
-
-### **Priority 3: Transfer Feedback (Medium)**
-*Crucial for User Experience during an active transfer.*
-- `transferCompletion`: Provides real-time progress updates.
-- `speed`: Provides real-time data rate information.
-
-### **Priority 4: Lifecycle & Control (Low)**
-*Used for managing the session lifecycle.*
-- `generateNewId`: Resets the entire connection state.
-- `setWantsClose`: Allows the user to terminate a connection/transfer.
-
-### **Priority 5: UI & Ephemeral State (Minimal)**
-*Primarily used for local component feedback and does not affect core logic.*
-- `notification` props (`message`, `type`, `onClose`)
-- `file` metadata (`fileName`, `fileSize`)
+### Ephemeral Toast State:
+| Prop | Component | Reason |
+|------|-----------|--------|
+| `message`, `type`, `onClose` | Notification | Auto-dismissing, component-specific lifecycle |

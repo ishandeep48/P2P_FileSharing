@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useP2P } from '../context/P2PContext';
 
-const FileUpload = ({ onFileSelect, selectedFile }) => {
-  const { dataChOpen } = useP2P();
+const FileUpload = () => {
+  const { dataChOpen, setFile, file: selectedFile } = useP2P();
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -21,14 +21,14 @@ const FileUpload = ({ onFileSelect, selectedFile }) => {
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      onFileSelect(files[0]);
+      setFile(files[0]);
     }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      onFileSelect(file);
+      setFile(file);
     }
   };
 
