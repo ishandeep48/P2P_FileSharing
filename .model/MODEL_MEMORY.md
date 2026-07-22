@@ -30,6 +30,8 @@
 
 ## 📉 Code Quality Debt (Technical Debt)
 | Issue | Status | AI Instruction / Note |
+* Created `.model/PROP_DRILLING.md` containing detailed prop drilling analysis.
+* Created `.model/PROP_DRILLING.md` containing detailed prop drilling analysis.
 | :--- | :--- | :--- |
 | **Prop Drilling** | `[INCOMPLETE]` | **CRITICAL:** Passing massive props through `Sender.jsx` and `Receiver.jsx`. **REFACTOR TASK:** Implement React Context API (`P2PContext`). |
 | **God Component (`App.jsx`)** | `[INCOMPLETE]` | `App.jsx` is overloaded with logic. **REFACTOR TASK:** Extract WebRTC/Socket logic into custom hooks (e.g., `useWebRTC`). |
@@ -47,5 +49,7 @@
 *   [ ] Refactor State Management (Context API)
 *   [ ] Modularize `App.jsx` logic
 
+* Created `.model/PROP_DRILLING.md` containing detailed prop drilling analysis.
+* Created `.model/PROP_DRILLING.md` containing detailed prop drilling analysis.
 ---
 *Last Updated: 2024-05-23*
