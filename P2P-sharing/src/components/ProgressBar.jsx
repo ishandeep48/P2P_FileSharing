@@ -1,6 +1,8 @@
 import React from 'react';
+import { useP2P } from '../context/P2PContext';
 
-const ProgressBar = ({ progress, speed, fileName, fileSize }) => {
+const ProgressBar = ({ fileName, fileSize }) => {
+  const { transferCompletion: progress, speed } = useP2P();
   // Ensure progress is a number and handle edge cases
   const safeProgress = typeof progress === 'number' ? progress : 0;
   const safeSpeed = typeof speed === 'number' ? speed : 0;

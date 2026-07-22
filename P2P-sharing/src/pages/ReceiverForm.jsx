@@ -158,10 +158,7 @@ export default function ReceiverForm() {
 
         {/* Progress Bar */}
         {(transferCompletion > 0 || speed > 0) && (
-          <ProgressBar
-            progress={transferCompletion}
-            speed={speed}
-          />
+          <ProgressBar />
         )}
       </div>
     </div>

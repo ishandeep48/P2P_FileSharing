@@ -76,17 +76,13 @@ let changed = false;
   return (
     <div className="min-h-screen py-16 px-4">
       {/* Server Warning */}
-      <ServerWarning socketError={socketError} socketConnected={socketConnected} />
+      <ServerWarning />
       
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Connection Card */}
         <div ref = {conCardRef}>
         <ConnectionCard
-          connectionId={connectionId}
           isConnected={dataChOpen}
-          onGenerateNewId={generateNewId}
-          socketConnected={socketConnected}
-          socketError={socketError}
         /></div>
 
         {/* File Upload Section */}
@@ -141,8 +137,6 @@ let changed = false;
         <div ref={progressRef}>
         {(transferCompletion > 0 || speed > 0) && (
           <ProgressBar
-            progress={transferCompletion}
-            speed={speed}
             fileName={file?.name}
             fileSize={file?.size}
           />
