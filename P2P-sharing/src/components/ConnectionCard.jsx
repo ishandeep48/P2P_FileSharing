@@ -2,9 +2,9 @@ import React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useP2P } from '../context/P2PContext';
 
-const ConnectionCard = ({ isConnected }) => {
-  const { connectionId, generateNewId: onGenerateNewId, socketConnected, socketError } = useP2P();
-  console.log('ConnectionCard Debug:', { socketConnected, socketError, isConnected, connectionId });
+const ConnectionCard = () => {
+  const { connectionId, generateNewId: onGenerateNewId, socketConnected, dataChOpen } = useP2P();
+  console.log('ConnectionCard Debug:', { socketConnected, dataChOpen, connectionId });
   return (
     <div className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-white/20">
       <div className="text-center">
@@ -42,9 +42,9 @@ const ConnectionCard = ({ isConnected }) => {
           
           {/* Peer Connection Status */}
           <div className="flex items-center justify-center">
-            <div className={`w-3 h-3 rounded-full mr-2 ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+            <div className={`w-3 h-3 rounded-full mr-2 ${dataChOpen ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
             <span className="text-white text-sm">
-              Peer: {isConnected ? 'Connected' : 'Waiting'}
+              Peer: {dataChOpen ? 'Connected' : 'Waiting'}
             </span>
           </div>
         </div>

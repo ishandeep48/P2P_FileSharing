@@ -82,7 +82,7 @@ let changed = false;
         {/* Connection Card */}
         <div ref = {conCardRef}>
         <ConnectionCard
-          isConnected={dataChOpen}
+          
         /></div>
 
         {/* File Upload Section */}
@@ -90,7 +90,7 @@ let changed = false;
           <FileUpload
             onFileSelect={handleFileSelect}
             selectedFile={file}
-            isConnected={dataChOpen}
+            
           />
 
           {/* Send Button */}
