@@ -6,6 +6,7 @@ const Notification = () => {
   const [isVisible, setIsVisible] = useState(true);
   const message = notif?.message || '';
   const type = notif?.type || 'info';
+  const duration = 5000;
 
   const typeStyles = {
     success: 'bg-green-500/20 border-green-500/30 text-green-200',

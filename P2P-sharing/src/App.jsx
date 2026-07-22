@@ -409,8 +409,8 @@ function App() {
       };
     });
     peerRef.current.addEventListener("iceconnectionstatechange", () => {
-      if (peerConnection.iceConnectionState === "connected") {
-        peerConnection.getStats().then((stats) => {
+      if (peerRef.current.iceConnectionState === "connected") {
+        peerRef.current.getStats().then((stats) => {
           stats.forEach((report) => {
             if (report.type === "candidate-pair" && report.selected) {
               // console.log(
@@ -583,10 +583,11 @@ function App() {
         const check = () => {
           if (canSendData.current) {
             res();
-          } else if (dataChannel.current.readyState) {
+          } else if (dataChannel.current) {
+            if (dataChannel.current.readyState === 'closed' || dataChannel.current.readyState === 'closing') {
+              throw new Error('Data closed while waiting');
+            }
             setTimeout(check, 100);
-          } else {
-            throw new Error("Data closed while Waiting");
           }
         };
         check();
