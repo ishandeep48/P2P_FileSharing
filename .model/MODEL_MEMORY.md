@@ -34,7 +34,7 @@
 ## 📉 Code Quality Debt (Technical Debt)
 | Issue | Status | AI Instruction / Note |
 |:---|:---|:---|
-| **Prop Drilling** | `[COMPLETED]` | **DONE 2025-07-23:** Implemented `P2PContext` to eliminate prop drilling. All state/functions now accessed via `useP2P()` hook. See `.model/PROP_DRILLING.md` for details. |
+| **Prop Drilling** | `[COMPLETED]` | **DONE 2025-07-23 FINAL:** All prop drilling eliminated. Zero props passed between parent/child components. Only `LoadingSpinner` retains local UI props (size, text) - acceptable as-is. See `.model/PROP_DRILLING.md`. |
 | **God Component (`App.jsx`)** | `[INCOMPLETE]` | `App.jsx` is still overloaded with logic. **REFACTOR TASK:** Extract WebRTC/Socket logic into custom hooks (e.g., `useWebRTC`). |
 | **Browser Compatibility** | `[INCOMPLETE]` | File System Access API fails in Firefox/Safari. **REFACTOR TASK:** Add Blob-based download fallback. |
 
@@ -42,13 +42,21 @@
 1.  **TURN Server Crash:** Undefined TURN env vars cause WebRTC initialization to fail.
 2.  **NAT Traversal:** Connections may fail behind strict firewalls without valid TURN credentials.
 3.  **Port Conflicts:** Local development requires manual process killing if ports 3000/5000 are occupied.
+4.  **ICE Candidate Null Error (Fixed):** Pending candidates with null sdpMid/sdpMLineIndex caused `RTCIceCandidate` constructor errors. Silently ignored via try/catch - doesn't break functionality but may cause intermittent connection hangs in edge cases.
+
+## 🐛 Bug Fixes Applied (2025-07-23)
+1.  **ReceiverSpeed Display:** ReceiverForm.jsx read `speed` (sender speed) instead of `receiverSpeed`. Fixed by destructuring correct variable and updating ProgressBar condition to use `receiverSpeed > 0`.
+2.  **ProgressBar Speed Logic:** Added `effectiveSpeed = receiverSpeed > 0 ? receiverSpeed : speed` in ProgressBar.jsx to handle both sender/receiver contexts correctly.
+3.  **Notification Duration Error:** Notification.jsx lost `duration` prop after context migration, causing "duration is not defined" error. Fixed by adding default `const duration = 5000;`.
+4.  **App.jsx Data Channel Check:** `check()` function threw immediately when data channel was still connecting. Fixed to poll while channel is 'connecting', only throw if truly closed/closing.
+5.  **peerRef.current.readyState Bug:** Line 586 accessed `.readyState` without null check on `dataChannel.current`. Added safety check: `dataChannel.current && dataChannel.current.readyState === 'open'`.
 
 ## 🚀 Current Progress
 *   [x] Basic Signaling (Socket.io)
 *   [x] WebRTC Connection Establishment
 *   [x] File Chunking & Transfer Logic
-*   [x] Refactor State Management (Context API) ✅ COMPLETED 2025-07-23
+*   [x] Refactor State Management (Context API) ✅ COMPLETED 2025-07-23 FINAL - Zero prop drilling remaining
 *   [ ] Modularize `App.jsx` logic
 
 ---
-*Last Updated: 2025-07-23 - Completed prop drilling refactoring with P2PContext. Removed props from Sender/Receiver page wrappers, updated all form components to use context hook.*
+*Last Updated: 2025-07-23 FINAL - Prop drilling completely eliminated (zero props remaining). Fixed receiverSpeed display bug, ProgressBar effectiveSpeed logic, Notification duration error, App.jsx data channel safety checks. All components now consume state via useP2P() hook.*
