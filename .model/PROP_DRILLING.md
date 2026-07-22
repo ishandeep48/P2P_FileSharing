@@ -89,3 +89,63 @@ The following props are passed through the Receiver page to the main form compon
 
 ### Stage 3: ReceiverForm.jsx $\rightarrow$ Child Components
 *(Note: Detailed analysis of ReceiverForm.jsx children would be required for full completeness, but the primary drilling is identified above.)*
+
+## 📊 Prop Priority & Grouping
+
+To optimize refactoring (e.g., moving to Context API), props have been grouped and ranked by their functional priority and impact on the application core.
+
+### **Priority 1: Core Transfer & Connection State (Critical)**
+*These are essential for the fundamental P2P operation.*
+- `dataChOpen`: Determines if data can actually be sent/received via WebRTC.
+- `uploadFile`: The primary action that drives the transfer logic.
+- `connectionId`: Essential for peer identification and signaling.
+
+### **Priority 2: Signaling & Network Status (High)**
+*These manage the underlying communication layer.*
+- `socketConnected` / `isSocket`: Indicates if the signaling server is reachable.
+- `socketError`: Critical for error handling and user feedback during connection attempts.
+
+### **Priority 3: Transfer Feedback (Medium)**
+*Crucial for User Experience during an active transfer.*
+- `transferCompletion`: Provides real-time progress updates.
+- `speed`: Provides real-time data rate information.
+
+### **Priority 4: Lifecycle & Control (Low)**
+*Used for managing the session lifecycle.*
+- `generateNewId`: Resets the entire connection state.
+- `setWantsClose`: Allows the user to terminate a connection/transfer.
+
+### **Priority 5: UI & Ephemeral State (Minimal)**
+*Primarily used for local component feedback and does not affect core logic.*
+- `notification` props (`message`, `type`, `onClose`)
+- `file` metadata (`fileName`, `fileSize`)
+
+## 📊 Prop Priority & Grouping
+
+To optimize refactoring (e.g., moving to Context API), props have been grouped and ranked by their functional priority and impact on the application core.
+
+### **Priority 1: Core Transfer & Connection State (Critical)**
+*These are essential for the fundamental P2P operation.*
+- `dataChOpen`: Determines if data can actually be sent/received via WebRTC.
+- `uploadFile`: The primary action that drives the transfer logic.
+- `connectionId`: Essential for peer identification and signaling.
+
+### **Priority 2: Signaling & Network Status (High)**
+*These manage the underlying communication layer.*
+- `socketConnected` / `isSocket`: Indicates if the signaling server is reachable.
+- `socketError`: Critical for error handling and user feedback during connection attempts.
+
+### **Priority 3: Transfer Feedback (Medium)**
+*Crucial for User Experience during an active transfer.*
+- `transferCompletion`: Provides real-time progress updates.
+- `speed`: Provides real-time data rate information.
+
+### **Priority 4: Lifecycle & Control (Low)**
+*Used for managing the session lifecycle.*
+- `generateNewId`: Resets the entire connection state.
+- `setWantsClose`: Allows the user to terminate a connection/transfer.
+
+### **Priority 5: UI & Ephemeral State (Minimal)**
+*Primarily used for local component feedback and does not affect core logic.*
+- `notification` props (`message`, `type`, `onClose`)
+- `file` metadata (`fileName`, `fileSize`)
