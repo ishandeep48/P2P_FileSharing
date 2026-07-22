@@ -5,19 +5,21 @@ import ProgressBar from "../components/ProgressBar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Notification from "../components/Notification";
 import ServerWarning from "../components/ServerWarning";
+import { useP2P } from "../context/P2PContext";
 
-export default function SenderForm({ 
-  connectionId, 
-  generateNewId, 
-  isSocket, 
-  uploadFile, 
-  dataChOpen, 
-  transferCompletion, 
-  speed,
-  setWantsClose,
-  socketConnected,
-  socketError
-}) {
+export default function SenderForm() {
+  const {
+    connectionId,
+    generateNewId,
+    isSocket,
+    uploadFile,
+    dataChOpen,
+    transferCompletion,
+    speed,
+    setWantsClose,
+    socketConnected,
+    socketError
+  } = useP2P();
   // console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);

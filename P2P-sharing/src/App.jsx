@@ -12,6 +12,7 @@ import Receiver from "./pages/Receiver";
 import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
 import { useCallback } from "react";
+import { P2PProvider } from "./context/P2PContext";
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
   const [connectionId, setConnectionId] = useState("");
@@ -767,45 +768,35 @@ function App() {
     }
   }, [registerSocketHandlers]);
 
+  const p2pValue = {
+    connectionId,
+    generateNewId,
+    isSocket,
+    uploadFile,
+    dataChOpen,
+    transferCompletion,
+    speed,
+    setWantsClose,
+    socketConnected,
+    socketError,
+    connectTO,
+    downloadURL,
+    showApprove,
+    setIsReadyToDownload,
+    receiverSpeed,
+  };
+
   return (
     <Router>
       <ParticleBackground />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/sender"
-          element={
-            <Sender
-              connectionId={connectionId}
-              generateNewId={generateNewId}
-              isSocket={isSocket}
-              uploadFile={uploadFile}
-              dataChOpen={dataChOpen}
-              transferCompletion={transferCompletion}
-              speed={speed}
-              setWantsClose={setWantsClose}
-              socketConnected={socketConnected}
-              socketError={socketError}
-            />
-          }
-        />
-        <Route
-          path="/receiver"
-          element={
-            <Receiver
-              connectTO={connectTO}
-              downloadURL={downloadURL}
-              dataChOpen={dataChOpen}
-              showApprove={showApprove}
-              setIsReadyToDownload={setIsReadyToDownload}
-              transferCompletion={transferCompletion}
-              speed={receiverSpeed}
-              setWantsClose={setWantsClose}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <P2PProvider value={p2pValue}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sender" element={<Sender />} />
+          <Route path="/receiver" element={<Receiver />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </P2PProvider>
     </Router>
   );
 }
