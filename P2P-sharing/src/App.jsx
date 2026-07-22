@@ -12,6 +12,7 @@ import Receiver from "./pages/Receiver";
 import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
 import { useCallback } from "react";
+import { P2PProvider } from "./context/P2PContext";
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
   const [connectionId, setConnectionId] = useState("");
@@ -27,6 +28,8 @@ function App() {
   const [wantsClose, setWantsClose] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [socketError, setSocketError] = useState(false);
+  const [file, setFile] = useState(null);
+  const [notification, setNotification] = useState(null);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const socketRef = useRef();
@@ -406,8 +409,8 @@ function App() {
       };
     });
     peerRef.current.addEventListener("iceconnectionstatechange", () => {
-      if (peerConnection.iceConnectionState === "connected") {
-        peerConnection.getStats().then((stats) => {
+      if (peerRef.current.iceConnectionState === "connected") {
+        peerRef.current.getStats().then((stats) => {
           stats.forEach((report) => {
             if (report.type === "candidate-pair" && report.selected) {
               // console.log(
@@ -580,10 +583,11 @@ function App() {
         const check = () => {
           if (canSendData.current) {
             res();
-          } else if (dataChannel.current.readyState) {
+          } else if (dataChannel.current) {
+            if (dataChannel.current.readyState === 'closed' || dataChannel.current.readyState === 'closing') {
+              throw new Error('Data closed while waiting');
+            }
             setTimeout(check, 100);
-          } else {
-            throw new Error("Data closed while Waiting");
           }
         };
         check();
@@ -767,45 +771,39 @@ function App() {
     }
   }, [registerSocketHandlers]);
 
+  const p2pValue = {
+    connectionId,
+    generateNewId,
+    isSocket,
+    uploadFile,
+    dataChOpen,
+    transferCompletion,
+    speed,
+    setWantsClose,
+    socketConnected,
+    socketError,
+    connectTO,
+    downloadURL,
+    showApprove,
+    setIsReadyToDownload,
+    receiverSpeed,
+    file,
+    setFile,
+    notification,
+    setNotification,
+  };
+
   return (
     <Router>
       <ParticleBackground />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/sender"
-          element={
-            <Sender
-              connectionId={connectionId}
-              generateNewId={generateNewId}
-              isSocket={isSocket}
-              uploadFile={uploadFile}
-              dataChOpen={dataChOpen}
-              transferCompletion={transferCompletion}
-              speed={speed}
-              setWantsClose={setWantsClose}
-              socketConnected={socketConnected}
-              socketError={socketError}
-            />
-          }
-        />
-        <Route
-          path="/receiver"
-          element={
-            <Receiver
-              connectTO={connectTO}
-              downloadURL={downloadURL}
-              dataChOpen={dataChOpen}
-              showApprove={showApprove}
-              setIsReadyToDownload={setIsReadyToDownload}
-              transferCompletion={transferCompletion}
-              speed={receiverSpeed}
-              setWantsClose={setWantsClose}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <P2PProvider value={p2pValue}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sender" element={<Sender />} />
+          <Route path="/receiver" element={<Receiver />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </P2PProvider>
     </Router>
   );
 }

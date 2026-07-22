@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { useP2P } from '../context/P2PContext';
 
-const FileUpload = ({ onFileSelect, selectedFile, isConnected }) => {
+const FileUpload = () => {
+  const { dataChOpen, setFile, file: selectedFile } = useP2P();
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -19,14 +21,14 @@ const FileUpload = ({ onFileSelect, selectedFile, isConnected }) => {
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      onFileSelect(files[0]);
+      setFile(files[0]);
     }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      onFileSelect(file);
+      setFile(file);
     }
   };
 
@@ -45,18 +47,18 @@ const FileUpload = ({ onFileSelect, selectedFile, isConnected }) => {
           isDragOver
             ? 'border-blue-400 bg-blue-50/20'
             : 'border-white/30 bg-white/5'
-        } ${!isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        } ${!dataChOpen ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => isConnected && fileInputRef.current?.click()}
+        onClick={() => dataChOpen && fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}
           type="file"
           onChange={handleFileSelect}
           className="hidden"
-          disabled={!isConnected}
+          disabled={!dataChOpen}
         />
         
         <div className="space-y-4">
@@ -71,17 +73,17 @@ const FileUpload = ({ onFileSelect, selectedFile, isConnected }) => {
           ) : (
             <div className="space-y-2">
               <h3 className="text-white font-semibold text-lg">
-                {isConnected ? 'Drop your file here' : 'Connect first to upload'}
+                {dataChOpen ? 'Drop your file here' : 'Connect first to upload'}
               </h3>
               <p className="text-white/70 text-sm">
-                {isConnected ? 'or click to browse' : 'Establish connection to start sharing'}
+                {dataChOpen ? 'or click to browse' : 'Establish connection to start sharing'}
               </p>
             </div>
           )}
         </div>
       </div>
       
-      {!isConnected && (
+      {!dataChOpen && (
         <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
           <p className="text-yellow-200 text-sm text-center">
             ⚠️ Please establish a connection before uploading files
