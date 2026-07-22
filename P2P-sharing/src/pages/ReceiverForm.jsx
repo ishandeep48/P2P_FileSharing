@@ -11,7 +11,7 @@ export default function ReceiverForm() {
     showApprove,
     setIsReadyToDownload,
     transferCompletion,
-    speed,
+    receiverSpeed,
     setWantsClose
   } = useP2P();
   const [count, setCount] = useState(0);
@@ -157,7 +157,7 @@ export default function ReceiverForm() {
         )}
 
         {/* Progress Bar */}
-        {(transferCompletion > 0 || speed > 0) && (
+        {(transferCompletion > 0 || receiverSpeed > 0) && (
           <ProgressBar />
         )}
       </div>
