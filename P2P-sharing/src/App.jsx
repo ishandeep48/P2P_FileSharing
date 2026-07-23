@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Home from "./pages/Home";
 import Sender from "./pages/Sender";
 import Receiver from "./pages/Receiver";
@@ -11,16 +11,24 @@ import useWebRTC from "./hooks/useWebRTC";
 import useFileTransfer from "./hooks/useFileTransfer";
 import useFileReceive from "./hooks/useFileReceive";
 import useUIState from "./hooks/useUIState";
+import useSocketHandlers from "./hooks/useSocketHandlers";
 
 function App() {
   const [file, setFile] = useState(null);
   const [notification, setNotification] = useState(null);
   
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
-  const { socketRef, connected: socketConnected, error: socketError, reconnect } = useSocketIO(socketServerIP);
+  
+  // ─── Handler Ref for initial mount (onConnectRef in useSocketIO) ──
+  const attachHandlersRef = useRef(null);
+  
+  // ─── Socket Hook (onConnectRef for initial mount, onReconnect callback for generateNewId) ──
+  const { socketRef, connected: socketConnected, error: socketError, reconnect } = useSocketIO(socketServerIP, {
+    onConnectRef: attachHandlersRef,
+  });
   
   // ─── WebRTC Configuration ─────────────────────────────────────────
-  const rtcConfig = useMemo(() => ({
+  const rtcConfig = useRef({
     iceTransportPolicy: "all",
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -37,8 +45,8 @@ function App() {
     bundlePolicy: "max-bundle",
     rtcpMuxPolicy: "require",
     iceConnectionState: "checking",
-  }), []);
-  
+  });
+
   // ─── WebRTC Hook ────────────────────────────────────────────────
   const {
     peerRef, dataChannel, pendingCandidates, remoteSocketID,
@@ -46,6 +54,9 @@ function App() {
     handleIncomingAnswer, handleIceCandidate, cleanup: webRTCCleanup, logConnectionType,
   } = useWebRTC({ socketRef, rtcConfig });
 
+  // ─── Refs for runtime values (fileReceiveHooks changes on every render) ──
+  const fileReceiveHooksRef = useRef(null);
+  
   // ─── UI State Hook ────────────────────────────────────────────────
   const {
     connectionId, dataChOpen, transferCompletion, speed, receiverSpeed,
@@ -59,7 +70,38 @@ function App() {
     handleWantsCloseCleanup, setConnectionId, setDataChOpen,
     setTransferCompletion, setSpeed, setReceiverSpeed,
     setIsReadyToDownload, setShowApprove, setWantsClose,
-  } = useUIState({ socketRef, dataChannel, peerRef, reconnect, rtcConfig });
+  } = useUIState({ 
+    socketRef, dataChannel, peerRef, reconnect, rtcConfig,
+    onReconnect: () => {
+      if (socketRef.current) {
+        console.log("[onReconnect] Attaching handlers via hook");
+        onReconnectAttach(socketRef.current);
+      }
+    },
+  });
+
+  // ─── Socket Handlers Hook ─────────────────────────────────────────
+  const { attachHandlers: onReconnectAttach, detachHandlers } = useSocketHandlers({
+    peerRef,
+    dataChannel,
+    receivedData,
+    fileReceiveHooksRef,
+    logConnectionType,
+    sendCall,
+    handleIncomingCall,
+    handleIncomingAnswer,
+    handleIceCandidate,
+    lastChunkTimeRef,
+    lastBytesReceivedRef,
+    setDataChOpen,
+    setConnectionId,
+    generateNewId,
+    dataChannelEvents,
+    senderDataChannelEvents,
+  });
+
+  // Set ref for initial mount (onConnectRef in useSocketIO)
+  attachHandlersRef.current = onReconnectAttach;
 
   // ─── File Transfer Hook ─────────────────────────────────────────────
   const { uploadFile } = useFileTransfer({
@@ -69,80 +111,28 @@ function App() {
   });
 
   // ─── File Receive Hook ──────────────────────────────────────────────
-  const fileReceiveHooks = useFileReceive({
+  const fileReceive = useFileReceive({
     dataChannel, writableStream, fileNameRef, fileTypeRef, fileSizeRef,
     metadataRef, isMetaDataReceivedRef, setTransferCompletion, setReceiverSpeed,
     setShowApprove, setIsReadyToDownload, byteSentRef, lastChunkTimeRef,
     lastBytesReceivedRef, lastUpdateTimeRef, lastUpdateTransferRef,
   });
 
-  // ─── Socket Event Handlers ──────────────────────────────────────────
-  const registerSocketHandlers = useMemo(() => {
-    return () => {
-      if (!peerRef.current || !socketRef?.current) return;
-
-      peerRef.current.oniceconnectionstatechange = () => {
-        if (peerRef.current.iceConnectionState === "connected") {
-          setTimeout(logConnectionType, 1000);
-        }
-      };
-
-      peerRef.current.ondatachannel = (event) => {
-        const channel = event.channel;
-        dataChannel.current = channel;
-        receivedData.current = [];
-
-        setTimeout(() => {
-          if (!channel) return;
-          channel.onopen = () => {
-            setDataChOpen(true);
-            lastChunkTimeRef.current = Date.now();
-            lastBytesReceivedRef.current = 0;
-          };
-          channel.onmessage = async (event) => fileReceiveHooks.handleMessage(event);
-          channel.onclose = async () => { generateNewId(); setDataChOpen(false); };
-        }, 0);
-      };
-
-      socketRef.current.on("connection-id", (id) => setConnectionId(id));
-
-      socketRef.current.on("wants-to-connect", async (data) => {
-        const { who } = data;
-        await sendCall(who);
-        setTimeout(() => { if (dataChannel.current) { dataChannelEvents(); senderDataChannelEvents(); } }, 0);
-      });
-
-      socketRef.current.on("incoming-call", async (data) => await handleIncomingCall(data));
-
-      socketRef.current.on("incoming-answer", async (data) => {
-        const { from, offer } = data;
-        await handleIncomingAnswer({ from, offer });
-        peerRef.current.onicegatheringstatechange = () => {
-          if (peerRef.current.iceGatheringState === "complete") {
-            const channel = peerRef.current.createDataChannel("file-transfer", { ordered: true });
-            dataChannel.current = channel;
-            setTimeout(() => senderDataChannelEvents(), 0);
-          }
-        };
-      });
-
-      socketRef.current.on("ice-candidate", async (data) => await handleIceCandidate(data));
-    };
-  }, [peerRef, socketRef, logConnectionType, dataChannel, receivedData, fileReceiveHooks, sendCall, 
-      handleIncomingCall, handleIncomingAnswer, handleIceCandidate, generateNewId, setDataChOpen,
-      lastChunkTimeRef, lastBytesReceivedRef, dataChannelEvents, senderDataChannelEvents]);
+  // Update ref so handler always has current fileReceiveHooks
+  useEffect(() => {
+    fileReceiveHooksRef.current = fileReceive;
+  }, [fileReceive]);
 
   // ─── Effects ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!isReadyToDownload) return;
-    fileReceiveHooks.askForLocation();
-  }, [isReadyToDownload, fileReceiveHooks]);
+    fileReceive.askForLocation();
+  }, [isReadyToDownload, fileReceive]);
 
   useEffect(() => { handleWantsCloseCleanup(); }, [wantsClose, handleWantsCloseCleanup]);
 
   useEffect(() => {
     createPeerConnection();
-    registerSocketHandlers();
     return () => webRTCCleanup();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

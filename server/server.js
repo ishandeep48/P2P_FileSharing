@@ -53,6 +53,11 @@ io.on('connection', socket => {
     console.log(`connected to client socket ${socket.shortId}`);
     socket.emit('connection-id', socket.shortId);
     
+    // Allow clients to request connection ID (covers race condition)
+    socket.on('get-connection-id', () => {
+        socket.emit('connection-id', socket.shortId);
+    });
+    
     // --------------------------------------------------------------
     socket.on('connect-to-sender', data => {
         const { to } = data;

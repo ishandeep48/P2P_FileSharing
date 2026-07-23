@@ -331,11 +331,13 @@ describe('useUIState Hook', () => {
         },
       };
       
-      mockPeerRef.current = {};
-
+      // Set up dataChannel with a close method that throws
+      const mockFailingDataChannel = { current: { close: () => { throw new Error("close failed"); } } };
+      
       const { result } = renderHook(() => useUIState({
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
+        dataChannel: mockFailingDataChannel,
         reconnect: mockReconnect,
         rtcConfig: mockRtcConfig
       }));

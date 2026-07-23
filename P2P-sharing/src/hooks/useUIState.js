@@ -16,9 +16,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
  * @param {React.RefObject} deps.peerRef - WebRTC peer connection ref from useWebRTC
  * @param {Function} deps.reconnect - Reconnection function from useSocketIO
  * @param {Object} deps.rtcConfig - WebRTC configuration object
+ * @param {Function} [deps.onReconnect] - Callback invoked synchronously after reconnect (for attaching socket handlers)
  * @returns {Object} State variables and action handlers
  */
-function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: externalPeerRef, reconnect, rtcConfig }) {
+function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: externalPeerRef, reconnect, rtcConfig, onReconnect }) {
   // ─── Connection State ────────────────────────────────────────────────
   const [connectionId, setConnectionId] = useState("");
   const [dataChOpen, setDataChOpen] = useState(false);
@@ -95,12 +96,19 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: extern
       peerRef.current = null;
     }
 
-    // Recreate socket (connection state handled by useSocketIO)
+    // Recreate peer connection FIRST (always, even if external)
+    if (!peerRef.current) {
+      peerRef.current = new RTCPeerConnection(rtcConfig);
+    }
+
+    console.log("[generateNewId] Calling reconnect...");
+    // Then recreate socket — handlers will be attached synchronously after creation
     reconnect();
     
-    // Only recreate peer connection if not managed externally
-    if (!externalPeerRef && !peerRef.current) {
-      peerRef.current = new RTCPeerConnection(rtcConfig);
+    // Call onReconnect callback synchronously (runs while peerRef.current is valid)
+    if (onReconnect) {
+      console.log("[generateNewId] Calling onReconnect...");
+      onReconnect(peerRef, socketRef);
     }
   }, [reconnect, rtcConfig]);
 
@@ -111,7 +119,7 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: extern
    * @param {string} remotePeer - Remote peer's socket ID
    */
   const connectTO = useCallback((remotePeer) => {
-    if (peerRef?.current || dataChannel?.current) {
+    if (dataChannel?.current) {
       try {
         dataChannel.current.close();
         dataChannel.current = null;

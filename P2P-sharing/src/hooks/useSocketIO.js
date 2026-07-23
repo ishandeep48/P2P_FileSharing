@@ -9,11 +9,15 @@ import { io } from "socket.io-client";
  * - Connection state tracking (connected/error)
  * - Reconnection logic for generateNewId() reuse
  * - Cleanup on unmount or before reinitialization
+ * - Custom handler attachment via onConnectRef callback ref (called SYNCHRONOUSLY after every connect/reconnect)
  * 
  * @param {string} serverURL - Socket server URL from env
+ * @param {Object} [options] - Optional configuration
+ * @param {Function} [options.onConnectRef] - Ref to a function called when socket connects (for attaching custom handlers)
  * @returns {{ socketRef: RefObject, connected: boolean, error: boolean, reconnect: Function }}
  */
-function useSocketIO(serverURL) {
+function useSocketIO(serverURL, options = {}) {
+  const { onConnectRef } = options || {};
   const socketRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(false);
@@ -28,6 +32,10 @@ function useSocketIO(serverURL) {
     socket.on("connect", () => {
       setConnected(true);
       setError(false);
+      // Call handler on connect for initial mount
+      if (onConnectRef?.current) {
+        onConnectRef.current(socket);
+      }
     });
 
     socket.on("disconnect", () => {
@@ -102,6 +110,8 @@ function useSocketIO(serverURL) {
       cleanupSocket();
     };
   }, [createSocket, cleanupSocket]);
+
+
 
   /**
    * Reinitialize the socket connection.
