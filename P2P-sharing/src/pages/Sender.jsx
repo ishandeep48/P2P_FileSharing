@@ -1,7 +1,7 @@
 import SenderForm from './SenderForm';
 import NavBar from './NavBar';
 
-export default function Sender({connectionId,generateNewId,isSocket,uploadFile,dataChOpen,transferCompletion,speed,setWantsClose,socketConnected,socketError}) {
+export default function Sender({connectionId,generateNewId,uploadFile,dataChOpen,transferCompletion,speed,setWantsClose,socketConnected,socketError}) {
     
     return(
         <div className="min-h-screen">
@@ -10,7 +10,6 @@ export default function Sender({connectionId,generateNewId,isSocket,uploadFile,d
                 <SenderForm
                 connectionId={connectionId}
                 generateNewId={generateNewId}
-                isSocket={isSocket}
                 uploadFile={uploadFile}
                 dataChOpen={dataChOpen}
                 transferCompletion={transferCompletion}

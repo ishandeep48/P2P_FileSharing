@@ -15,9 +15,6 @@ import { useCallback } from "react";
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
   const [connectionId, setConnectionId] = useState("");
-  const [isSocket, setIsSocket] = useState(false);
-  const [downloadURL, setDownloadURL] = useState(null);
-  const [signalState, setSignalState] = useState(false);
   const [dataChOpen, setDataChOpen] = useState(false);
   const [isReadyToDownload, setIsReadyToDownload] = useState(false);
   const [showApprove, setShowApprove] = useState(false);
@@ -366,7 +363,6 @@ function App() {
       };
       const answer = await peerRef.current.createAnswer();
       await peerRef.current.setLocalDescription(answer);
-      setSignalState(true);
       socketRef.current.emit("call-accepted", { answer, to: from });
     });
 
@@ -374,7 +370,6 @@ function App() {
       const { from, offer } = data;
       // console.log(` socket id ${from} se answer receive hua`);
       await peerRef.current.setRemoteDescription(offer);
-      setSignalState(true);
       pendingCandidates.current.forEach(async (candidate) => {
         try {
           await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -472,54 +467,37 @@ function App() {
 
     // Socket connection event handlers
     socketRef.current.on("connect", () => {
-      // console.log("Connected to socket server");
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
-      // console.log("Socket connected state set to true");
-      // console.log("Socket connected property:", socketRef.current.connected);
     });
 
     socketRef.current.on("disconnect", () => {
-      // console.log("Disconnected from socket server");
       setSocketConnected(false);
-      setIsSocket(false);
-      // console.log("Socket connected state set to false");
     });
 
     socketRef.current.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
       setSocketConnected(false);
       setSocketError(true);
-      setIsSocket(false);
     });
 
     socketRef.current.on("reconnect", (attemptNumber) => {
-      // console.log(
-      //   "Reconnected to socket server after",
-      //   attemptNumber,
-      //   "attempts"
-      // );
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
     });
 
     socketRef.current.on("reconnect_error", (error) => {
       console.error("Socket reconnection error:", error);
       setSocketConnected(false);
       setSocketError(true);
-      setIsSocket(false);
     });
 
     registerSocketHandlers();
 
     // Check if socket is already connected
     if (socketRef.current.connected) {
-      // console.log("Socket already connected on mount");
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
     }
 
     return () => {
@@ -658,9 +636,6 @@ function App() {
   }, [wantsClose]);
   const generateNewId = useCallback(() => {
     setConnectionId("");
-    setIsSocket(false);
-    setDownloadURL(null);
-    setSignalState(false);
     setDataChOpen(false);
     setIsReadyToDownload(false);
     setShowApprove(false);
@@ -716,54 +691,36 @@ function App() {
     };
     // Set up socket connection event handlers for the new socket
     socketRef.current.on("connect", () => {
-      // console.log("Connected to socket server (generateNewId)");
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
-      // console.log("Socket connected state set to true (generateNewId)");
     });
 
     socketRef.current.on("disconnect", () => {
-      // console.log("Disconnected from socket server (generateNewId)");
       setSocketConnected(false);
-      setIsSocket(false);
-      // console.log("Socket connected state set to false (generateNewId)");
     });
 
     socketRef.current.on("connect_error", (error) => {
-      console.error("Socket connection error (generateNewId):", error);
+      console.error("Socket connection error:", error);
       setSocketConnected(false);
       setSocketError(true);
-      setIsSocket(false);
     });
 
     socketRef.current.on("reconnect", (attemptNumber) => {
-      // console.log(
-      //   "Reconnected to socket server after",
-      //   attemptNumber,
-      //   "attempts (generateNewId)"
-      // );
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
     });
 
     socketRef.current.on("reconnect_error", (error) => {
-      console.error("Socket reconnection error (generateNewId):", error);
+      console.error("Socket reconnection error:", error);
       setSocketConnected(false);
       setSocketError(true);
-      setIsSocket(false);
     });
-
-    setIsSocket(true);
     registerSocketHandlers();
 
     // Check if socket is already connected
     if (socketRef.current.connected) {
-      // console.log("Socket already connected on generateNewId");
       setSocketConnected(true);
       setSocketError(false);
-      setIsSocket(true);
     }
   }, [registerSocketHandlers]);
 
@@ -778,7 +735,6 @@ function App() {
             <Sender
               connectionId={connectionId}
               generateNewId={generateNewId}
-              isSocket={isSocket}
               uploadFile={uploadFile}
               dataChOpen={dataChOpen}
               transferCompletion={transferCompletion}
@@ -794,7 +750,6 @@ function App() {
           element={
             <Receiver
               connectTO={connectTO}
-              downloadURL={downloadURL}
               dataChOpen={dataChOpen}
               showApprove={showApprove}
               setIsReadyToDownload={setIsReadyToDownload}

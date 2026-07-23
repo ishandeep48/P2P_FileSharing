@@ -4,7 +4,6 @@ import ProgressBar from '../components/ProgressBar';
 
 export default function ReceiverForm({
   connectTO,
-  downloadURL,
   dataChOpen,
   showApprove,
   setIsReadyToDownload,

@@ -9,7 +9,6 @@ import ServerWarning from "../components/ServerWarning";
 export default function SenderForm({ 
   connectionId, 
   generateNewId, 
-  isSocket, 
   uploadFile, 
   dataChOpen, 
   transferCompletion, 
