@@ -4,16 +4,18 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { io } from "socket.io-client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import Home from "./pages/Home";
 import Sender from "./pages/Sender";
 import Receiver from "./pages/Receiver";
 import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
-import { useCallback } from "react";
+import useSocketIO from "./hooks/useSocketIO";
+
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
+  const { socketRef, connected: socketConnected, error: socketError, reconnect } = useSocketIO(socketServerIP);
+  
   const [connectionId, setConnectionId] = useState("");
   const [dataChOpen, setDataChOpen] = useState(false);
   const [isReadyToDownload, setIsReadyToDownload] = useState(false);
@@ -22,11 +24,9 @@ function App() {
   const [speed, setSpeed] = useState(0);
   const [receiverSpeed, setReceiverSpeed] = useState(0);
   const [wantsClose, setWantsClose] = useState(false);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [socketError, setSocketError] = useState(false);
+  
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
-  const socketRef = useRef();
   const peerRef = useRef();
   const dataChannel = useRef();
   const receivedData = useRef([]);
@@ -455,53 +455,11 @@ function App() {
     iceConnectionState: "checking",
   };
   useEffect(() => {
-    socketRef.current = io(socketServerIP, {
-      transports: ["websocket"],
-      upgrade: false,
-      timeout: 10000, // 10 second timeout
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
     peerRef.current = new RTCPeerConnection(rtcConfig);
-
-    // Socket connection event handlers
-    socketRef.current.on("connect", () => {
-      setSocketConnected(true);
-      setSocketError(false);
-    });
-
-    socketRef.current.on("disconnect", () => {
-      setSocketConnected(false);
-    });
-
-    socketRef.current.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      setSocketConnected(false);
-      setSocketError(true);
-    });
-
-    socketRef.current.on("reconnect", (attemptNumber) => {
-      setSocketConnected(true);
-      setSocketError(false);
-    });
-
-    socketRef.current.on("reconnect_error", (error) => {
-      console.error("Socket reconnection error:", error);
-      setSocketConnected(false);
-      setSocketError(true);
-    });
 
     registerSocketHandlers();
 
-    // Check if socket is already connected
-    if (socketRef.current.connected) {
-      setSocketConnected(true);
-      setSocketError(false);
-    }
-
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
       if (peerRef.current) peerRef.current.close();
       if (dataChannel.current) dataChannel.current.close();
     };
@@ -663,65 +621,12 @@ function App() {
       peerRef.current = null;
     }
 
-    if (socketRef.current) {
-      socketRef.current.off("connection-id");
-      socketRef.current.off("wants-to-connect");
-      socketRef.current.off("incoming-call");
-      socketRef.current.off("incoming-answer");
-      socketRef.current.off("ice-candidate");
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-
-    socketRef.current = io(socketServerIP, {
-      transports: ["websocket"],
-      upgrade: false,
-      timeout: 10000, // 10 second timeout
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
+    // Recreate socket (connection state handled by useSocketIO)
+    reconnect();
+    
+    // Recreate peer connection and re-register handlers
     peerRef.current = new RTCPeerConnection(rtcConfig);
-
-    peerRef.current.oniceconnectionstatechange = () => {
-      if (peerRef.current.iceConnectionState === "connected") {
-        logConnectionType();
-      }
-    };
-    // Set up socket connection event handlers for the new socket
-    socketRef.current.on("connect", () => {
-      setSocketConnected(true);
-      setSocketError(false);
-    });
-
-    socketRef.current.on("disconnect", () => {
-      setSocketConnected(false);
-    });
-
-    socketRef.current.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-      setSocketConnected(false);
-      setSocketError(true);
-    });
-
-    socketRef.current.on("reconnect", (attemptNumber) => {
-      setSocketConnected(true);
-      setSocketError(false);
-    });
-
-    socketRef.current.on("reconnect_error", (error) => {
-      console.error("Socket reconnection error:", error);
-      setSocketConnected(false);
-      setSocketError(true);
-    });
     registerSocketHandlers();
-
-    // Check if socket is already connected
-    if (socketRef.current.connected) {
-      setSocketConnected(true);
-      setSocketError(false);
-    }
   }, [registerSocketHandlers]);
 
   return (
