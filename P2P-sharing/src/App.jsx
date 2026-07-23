@@ -12,6 +12,7 @@ import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
 import useSocketIO from "./hooks/useSocketIO";
 import useFileTransfer from "./hooks/useFileTransfer";
+import useFileReceive from "./hooks/useFileReceive";
 
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
@@ -134,6 +135,26 @@ function App() {
     logConnectionType,
   });
 
+  // ─── File Receive Hook ──────────────────────────────────────────────
+  const fileReceiveHooks = useFileReceive({
+    dataChannel,
+    writableStream,
+    fileNameRef,
+    fileTypeRef,
+    fileSizeRef,
+    metadataRef,
+    isMetaDataReceivedRef,
+    setTransferCompletion,
+    setReceiverSpeed,
+    setShowApprove,
+    setIsReadyToDownload,
+    byteSentRef,
+    lastChunkTimeRef,
+    lastBytesReceivedRef,
+    lastUpdateTimeRef,
+    lastUpdateTransferRef,
+  });
+
   const dataChannelEvents = () => {
     dataChannel.current.onopen = () => {
       // console.log("opened data channel");
@@ -171,42 +192,7 @@ function App() {
   };
   useEffect(() => {
     if (!isReadyToDownload) return;
-
-    const askForLocation = async () => {
-      try {
-        // console.log("ask for location");
-        let ext = fileNameRef.current.split(".").pop();
-        fileHandle = await window.showSaveFilePicker({
-          suggestedName: fileNameRef.current,
-          types: [
-            {
-              description: " Received File",
-              accept: { [fileTypeRef.current]: ["." + ext] },
-            },
-          ],
-        });
-        writableStream.current = await fileHandle.createWritable();
-        // console.log("gonna send report from receiver to sender");
-        const reportMessage = {
-          status: true,
-        };
-        const sentData = JSON.stringify(reportMessage);
-        dataChannel.current.send(sentData);
-        // console.log("sent report to sender ", sentData);
-      } catch (err) {
-        // console.log("User closed the box");
-        setIsReadyToDownload(false);
-        if (dataChannel.current && dataChannel.current.readyState === "open") {
-          const reportMessage = {
-            status: false,
-          };
-          const sentData = JSON.stringify(reportMessage);
-          dataChannel.current.send(sentData);
-          // console.log("Sent cancellation report to sender");
-        }
-      }
-    };
-    askForLocation();
+    fileReceiveHooks.askForLocation();
   }, [isReadyToDownload]);
   const registerSocketHandlers = () => {
     // Add to the iceconnectionstatechange handler
@@ -229,86 +215,7 @@ function App() {
       // ---------------------------------------------------s
 
       dataChannel.current.onmessage = async (event) => {
-        if (!isMetaDataReceivedRef.current) {
-          if (typeof event.data == "string") {
-            try {
-              metadataRef.current = JSON.parse(event.data);
-              fileNameRef.current =
-                metadataRef.current.fileName || "received_file";
-              fileTypeRef.current =
-                metadataRef.current.fileType || "text/plain";
-              fileSizeRef.current = metadataRef.current.fileSize;
-              isMetaDataReceivedRef.current = true;
-
-              // Reset progress tracking for new file
-              setTransferCompletion(0);
-              setReceiverSpeed(0);
-              byteSentRef.current = 0;
-              lastChunkTimeRef.current = Date.now();
-              lastBytesReceivedRef.current = 0;
-              lastUpdateTimeRef.current = 0;
-              lastUpdateTransferRef.current = 0;
-
-              // console.log("metadata received");
-              setShowApprove(true);
-              // console.log("receiving and saving to ", fileNameRef.current);
-            } catch (e) {
-              console.warn("Error parsing metadata:", e);
-            }
-          }
-        } else if (typeof event.data == "string" && event.data == "__EOF__") {
-          // console.log("EOF Received, closing stream");
-          if (writableStream.current) {
-            await writableStream.current.close();
-          }
-          setTransferCompletion(100);
-          dataChannel.current.send("__EOF_ACK__");
-
-          // Reset state after file transfer
-          isMetaDataReceivedRef.current = false;
-          byteSentRef.current = 0;
-          lastChunkTimeRef.current = null;
-          lastBytesReceivedRef.current = 0;
-          lastUpdateTimeRef.current = 0;
-          lastUpdateTransferRef.current = 0;
-          writableStream.current = null;
-          setIsReadyToDownload(false);
-          setShowApprove(false);
-
-          const reportMessage = {
-            status: false,
-          };
-          const sentData = JSON.stringify(reportMessage);
-          dataChannel.current.send(sentData);
-          // console.log("sent report to sender to not send without permission");
-          return;
-        } else if (event.data && writableStream.current) {
-          // console.log("receiving file data");
-
-          await writableStream.current.write(event.data);
-          const now = Date.now();
-          const chunkSize = event.data.size || event.data.byteLength || 0;
-          byteSentRef.current += chunkSize;
-
-          // Calculate speed
-          const timeDelta = (now - (lastChunkTimeRef.current || now)) / 1000;
-          if (timeDelta > 0) {
-            let instSpeed = (chunkSize * 8) / (timeDelta * 1024 * 1024);
-            instSpeed = parseFloat(instSpeed).toFixed(2);
-            if (now - lastUpdateTimeRef.current >= 500) {
-              setReceiverSpeed(parseFloat(instSpeed));
-              lastUpdateTimeRef.current = now;
-            }
-          }
-
-          lastChunkTimeRef.current = now;
-
-          // Update progress more frequently for real-time feel
-          const progress = (byteSentRef.current / fileSizeRef.current) * 100;
-          setTransferCompletion(parseFloat(progress));
-        } else {
-          console.warn("Unknown data received");
-        }
+        fileReceiveHooks.handleMessage(event);
       };
 
       // --------------------------------------
