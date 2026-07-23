@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { PROGRESS_POLL_INTERVAL } from "../context/P2PContext";
 
 /**
  * useFileReceive - Encapsulates WebRTC file receive logic with chunked writing, progress tracking, and save dialog.
@@ -6,8 +7,8 @@ import { useCallback } from "react";
  * This hook extracts the entire file receiving logic from App.jsx's `dataChannel.onmessage` handler, including:
  * - Metadata parsing (JSON) for fileName, fileType, fileSize
  * - File data chunk writing to writable stream via File System Access API
- * - Progress percentage calculation (real-time updates)
- * - Speed calculation in MB/s (throttled to 500ms updates)
+ * - Progress percentage calculation (throttled to configurable interval)
+ * - Speed calculation in Mbps (throttled to PROGRESS_POLL_INTERVAL)
  * - EOF handling and ACK signaling
  * - Save file picker dialog integration
  * 
@@ -129,14 +130,14 @@ function useFileReceive(config) {
           const chunkSize = event.data.size || event.data.byteLength || 0;
           byteSentRef.current += chunkSize;
 
-          // ─── Speed Calculation (throttled to 500ms) ──────────────────
+          // ─── Speed Calculation (throttled to configurable interval) ─
           const timeDelta = (now - (lastChunkTimeRef.current || now)) / 1000;
           if (timeDelta > 0) {
             let instSpeed = (chunkSize * 8) / (timeDelta * 1024 * 1024);
             instSpeed = parseFloat(instSpeed).toFixed(2);
 
-            // Only update speed display every 500ms to avoid excessive re-renders
-            if (now - lastUpdateTimeRef.current >= 500) {
+            // Only update speed display at configured interval to avoid excessive re-renders
+            if (now - lastUpdateTimeRef.current >= PROGRESS_POLL_INTERVAL) {
               setReceiverSpeed(parseFloat(instSpeed));
               lastUpdateTimeRef.current = now;
             }

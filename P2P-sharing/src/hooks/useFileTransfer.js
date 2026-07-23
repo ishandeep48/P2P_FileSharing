@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { PROGRESS_POLL_INTERVAL } from "../context/P2PContext";
 
 /**
  * useFileTransfer - Encapsulates WebRTC file upload logic with chunking, throttling, and progress tracking.
@@ -6,8 +7,8 @@ import { useCallback } from "react";
  * This hook extracts the entire `uploadFile()` function from App.jsx, including:
  * - File stream reading and 256KB chunking
  * - Buffer management (15MB MAX_BUFFERED_AMOUNT throttling)
- * - Progress percentage calculation (throttled to 100ms updates)
- * - Speed calculation in MB/s (throttled to 500ms updates)
+ * - Progress percentage calculation (throttled to configurable interval)
+ * - Speed calculation in Mbps (throttled to PROGRESS_POLL_INTERVAL)
  * - Metadata sending and EOF signaling
  * 
  * @param {Object} config - All dependencies from App.jsx that this hook needs
@@ -142,7 +143,7 @@ function useFileTransfer(config) {
                 const instSpeed = parseFloat(
                   ((bytesDelta * 8) / (timeDelta * 1024 * 1024)).toFixed(2)
                 );
-                if (now - lastUpdateTimeRef.current >= 500) {
+                if (now - lastUpdateTimeRef.current >= PROGRESS_POLL_INTERVAL) {
                   setSpeed(instSpeed);
                   lastUpdateTimeRef.current = now;
                 }
@@ -153,8 +154,8 @@ function useFileTransfer(config) {
               lastSenderBytesSentRef.current = bytesSent;
               byteSentRef.current += chunk.byteLength;
 
-              // ─── Progress Update (throttled to 100ms) ───────────────
-              if (now - lastUpdateTransferRef.current >= 100) {
+              // ─── Progress Update (throttled to configurable interval) ──
+              if (now - lastUpdateTransferRef.current >= PROGRESS_POLL_INTERVAL) {
                 setTransferCompletion(
                   parseFloat((byteSentRef.current / fileSizeRef.current) * 100)
                 );

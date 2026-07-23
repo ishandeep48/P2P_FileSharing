@@ -1,6 +1,8 @@
 import React from 'react';
+import { useP2P } from '../context/P2PContext';
 
-const ServerWarning = ({ socketError, socketConnected }) => {
+const ServerWarning = () => {
+  const { socketError, socketConnected } = useP2P();
   // Only show warning when there's an error AND not connected
   if (!socketError || socketConnected) return null;
 
