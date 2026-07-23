@@ -629,6 +629,7 @@ describe('useFileReceive Hook', () => {
     it('should accumulate progress across multiple chunks', async () => {
       config.isMetaDataReceivedRef.current = true;
       config.writableStream.current = mockWritableStream;
+      config.lastUpdateTransferRef.current = 0; // Reset throttle for test
       
       const chunk1 = new ArrayBuffer(256);
       Object.defineProperty(chunk1, 'byteLength', { value: 256 });
@@ -644,6 +645,7 @@ describe('useFileReceive Hook', () => {
       const chunk2 = new ArrayBuffer(256);
       Object.defineProperty(chunk2, 'byteLength', { value: 256 });
       
+      config.lastUpdateTransferRef.current = 0; // Reset throttle for second update
       await act(async () => {
         await result.current.handleMessage({ data: chunk2 });
       });

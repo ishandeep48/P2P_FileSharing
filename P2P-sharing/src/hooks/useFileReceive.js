@@ -145,9 +145,12 @@ function useFileReceive(config) {
 
           lastChunkTimeRef.current = now;
 
-          // ─── Progress Update (real-time for smooth UI) ──────────────
-          const progress = (byteSentRef.current / fileSizeRef.current) * 100;
-          setTransferCompletion(parseFloat(progress));
+          // ─── Progress Update (throttled to configurable interval) ─────
+          if (now - lastUpdateTransferRef.current >= PROGRESS_POLL_INTERVAL) {
+            const progress = (byteSentRef.current / fileSizeRef.current) * 100;
+            setTransferCompletion(parseFloat(progress));
+            lastUpdateTransferRef.current = now;
+          }
         } catch (e) {
           console.error("Error writing chunk to stream:", e);
         }
