@@ -908,12 +908,12 @@ describe('useUIState Hook', () => {
         result.current.setWantsClose(true);
       });
 
-      // Trigger cleanup
-      act(() => {
+      // Trigger cleanup - should NOT throw error even if dataChannel.current is undefined
+      expect(() => {
         result.current.handleWantsCloseCleanup();
-      });
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('got error ', expect.any(Error));
+      }).not.toThrow();
+      
+      consoleErrorSpy.mockRestore();
       
       consoleErrorSpy.mockRestore();
     });

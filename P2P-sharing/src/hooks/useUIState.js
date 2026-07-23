@@ -12,13 +12,13 @@ import { useState, useRef, useCallback } from "react";
  * 
  * @param {Object} deps - Dependencies for action handlers
  * @param {React.RefObject} deps.socketRef - Socket.io reference for emitting events
- * @param {React.RefObject} deps.peerRef - WebRTC PeerConnection reference
+ * @param {React.RefObject} deps.dataChannel - Shared data channel ref from useWebRTC
  * @param {Function} deps.reconnect - Reconnection function from useSocketIO
  * @param {Object} deps.rtcConfig - WebRTC configuration object
  * @param {Function} deps.registerSocketHandlers - Handler registration function
  * @returns {Object} State variables and action handlers
  */
-function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers }) {
+function useUIState({ socketRef, dataChannel: sharedDataChannel, reconnect, rtcConfig, registerSocketHandlers }) {
   // ─── Connection State ────────────────────────────────────────────────
   const [connectionId, setConnectionId] = useState("");
   const [dataChOpen, setDataChOpen] = useState(false);
@@ -34,7 +34,8 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
   const [wantsClose, setWantsClose] = useState(false);
 
   // ─── Refs for Shared State ──────────────────────────────────────────
-  const dataChannel = useRef();
+  // Use the shared dataChannel ref from useWebRTC instead of creating a new one
+  const dataChannel = sharedDataChannel || useRef();
   const receivedData = useRef([]);
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
@@ -79,8 +80,12 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
     fileSizeRef.current = null;
     byteSentRef.current = 0;
 
-    if (dataChannel.current) {
-      dataChannel.current.close();
+    if (dataChannel?.current) {
+      try {
+        dataChannel.current.close();
+      } catch (err) {
+        console.error("Error closing data channel in generateNewId:", err);
+      }
       dataChannel.current = null;
     }
 
@@ -104,16 +109,16 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
    * @param {string} remotePeer - Remote peer's socket ID
    */
   const connectTO = useCallback((remotePeer) => {
-    if (peerRef.current || dataChannel.current) {
+    if (peerRef?.current || dataChannel?.current) {
       try {
         dataChannel.current.close();
         dataChannel.current = null;
       } catch (err) {
-        console.log(err);
+        console.error("Error in connectTO:", err);
       }
     }
     socketRef.current.emit("connect-to-sender", { to: remotePeer });
-  }, [socketRef]);
+  }, [socketRef, dataChannel]);
 
   // ─── Data Channel Event Handlers ────────────────────────────────────
   
@@ -121,6 +126,11 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
    * Sets up data channel event listeners for receiver side.
    */
   const dataChannelEvents = useCallback(() => {
+    if (!dataChannel?.current) {
+      console.error("dataChannelEvents: dataChannel.current is undefined");
+      return;
+    }
+    
     dataChannel.current.onopen = () => {
       setDataChOpen(true);
     };
@@ -132,12 +142,17 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
     dataChannel.current.onbufferedamountlow = () => {
       // Buffer available - ready for more data
     };
-  }, []);
+  }, [dataChannel]);
 
   /**
    * Sets up data channel event listeners for sender side.
    */
   const senderDataChannelEvents = useCallback(() => {
+    if (!dataChannel?.current) {
+      console.error("senderDataChannelEvents: dataChannel.current is undefined");
+      return;
+    }
+    
     dataChannel.current.bufferedAmountLowThreshold = 128 * 1024;
     dataChannel.current.onmessage = async (event) => {
       if (typeof event.data == "string" && event.data == "__EOF_ACK__") {
@@ -160,14 +175,14 @@ function useUIState({ socketRef, reconnect, rtcConfig, registerSocketHandlers })
    * Handles cleanup when wantsClose state changes.
    */
   const handleWantsCloseCleanup = useCallback(() => {
-    if (wantsClose) {
+    if (wantsClose && dataChannel?.current) {
       try {
         dataChannel.current.close();
       } catch (err) {
         console.error("got error ", err);
       }
     }
-  }, [wantsClose]);
+  }, [wantsClose, dataChannel]);
 
   // ─── Return State and Handlers ──────────────────────────────────────
   
