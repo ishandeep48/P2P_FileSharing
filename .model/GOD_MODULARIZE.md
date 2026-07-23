@@ -19,10 +19,10 @@
 | `wantsClose` | state | **App.jsx internal only** (useEffect → closes dataChannel) | Disconnect trigger from ReceiverForm |
 | `connectTO` / `uploadFile` / `generateNewId` | callbacks | `ReceiverForm`, `SenderForm` | Core actions |
 
-### Unused State (Dead Code)
-- `isSocket` — set but never consumed by any component
-- `downloadURL` — set once, never read
-- `signalState` — set in `incoming-call` handler, never read anywhere
+### Unused State (Dead Code) ✅ REMOVED 2025-07-23
+- ~~`isSocket`~~ → **REMOVED** — duplicate of `socketConnected`; no component consumed it
+- ~~`downloadURL`~~ → **REMOVED** — never held real data; file receive uses File System Access API directly
+- ~~`signalState`~~ → **REMOVED** — set in handlers but zero consumers anywhere
 
 ### Refs (Internal Only, Not Exposed to Components)
 | Ref | Purpose |
@@ -68,7 +68,7 @@
 
 ## 🚨 God Component Diagnosis
 
-### Yes, App.jsx is a God Component (~800 lines)
+### Yes, App.jsx is a God Component (~769 lines after Phase 6 cleanup)
 It violates the Single Responsibility Principle by handling **6 distinct responsibilities**:
 
 | Responsibility | Lines (approx) | % of File |
@@ -79,7 +79,7 @@ It violates the Single Responsibility Principle by handling **6 distinct respons
 | File transfer logic (sender chunking) | ~95 | 12% |
 | File receive logic (receiver streaming) | ~80 | 10% |
 | UI state + helpers (speed, progress, notifications) | ~60 | 7% |
-| **`generateNewId()` — duplicate of initial setup** | ~100 | 12% |
+| **`generateNewId()` — duplicate of initial setup** | ~100 | ~13% |
 | `logConnectionType()`, `dataChannelEvents()`, etc. | ~80 | 10% |
 
 ### Key Problems Identified
@@ -92,8 +92,8 @@ The function captures ~40 variables from App's scope (refs, setters, state). It 
 #### Problem C: Mixed Concerns in One useEffect
 Effect #2 does three things at once: initializes socket.io connection, creates RTCPeerConnection, and registers ALL socket event handlers. These are separate concerns that should be separated.
 
-#### Problem D: Unused State (`isSocket`, `downloadURL`, `signalState`)
-Dead code that adds noise and potential confusion.
+#### Problem D: Unused State (`isSocket`, `downloadURL`, `signalState`) ✅ RESOLVED
+**Resolved 2025-07-23:** All three removed from App.jsx, Sender.jsx, Receiver.jsx, SenderForm.jsx, and ReceiverForm.jsx. Zero references remain in codebase.
 
 #### Problem E: No Abstraction for WebRTC Lifecycle
 Creating, connecting, disconnecting, and reconnecting the peer connection is all inline logic with no reusable abstraction.
@@ -178,13 +178,19 @@ Creating, connecting, disconnecting, and reconnecting the peer connection is all
 **Files to create:** `P2P-sharing/src/hooks/useUIState.js`
 **Files to change:** `App.jsx`
 
-### Phase 6: Cleanup Dead Code & Simplify App.jsx
-**What changes:**
-- Remove unused state (`isSocket`, `downloadURL`, `signalState`)
+### Phase 6: Cleanup Dead Code & Simplify App.jsx ✅ COMPLETED 2025-07-23 (Partial)
+**What was done:**
+- ✅ Removed unused state (`isSocket`, `downloadURL`, `signalState`) from App.jsx
+- ✅ Removed all setter calls (`setIsSocket`, `setDownloadURL`, `setSignalState`) from socket handlers in both initial useEffect and generateNewId()
+- ✅ Removed `setSignalState(true)` calls from `incoming-call` and `incoming-answer` handlers (these were causing runtime errors after state removal)
+- ✅ Cleaned up prop drilling: removed unused props (`isSocket`, `downloadURL`) from Sender.jsx, Receiver.jsx, SenderForm.jsx, ReceiverForm.jsx
+- ✅ App.jsx reduced from ~800 lines to ~769 lines
+
+**What remains for Phase 6:**
 - Replace `generateNewId()` with a single `resetConnection()` call that reuses the hooks' internal reset logic (eliminating ~100 lines of duplication)
 - Consolidate all useEffects into one per hook
 
-**Files to change:** `App.jsx` only
+**Files changed:** App.jsx, Sender.jsx, Receiver.jsx, SenderForm.jsx, ReceiverForm.jsx
 
 ---
 
@@ -217,9 +223,9 @@ Components (all unchanged — they only consume context via useP2P())
 | **Phase 3: `useFileTransfer`** | Medium | Low-Medium | Self-contained sender logic; speed refs are internal |
 | **Phase 4: `useFileReceive`** | Medium | Medium | Touches File System Access API + approval flow; needs testing |
 | **Phase 5: `useUIState`** | Small | Very Low | Trivial extraction |
-| **Phase 6: Cleanup** | Small | Low | Final polish — remove dead code, eliminate duplication |
+| **Phase 6: Cleanup** | Small | Low | ~~Remove dead code~~ ✅ DONE — Eliminate `generateNewId()` duplication via shared hook reset logic |
 
-### Recommended Order: **1 → 2 → 3 → 4 → 5 → 6**
+### Recommended Order: **1 → 2 → 3 → 4 → 5 → 6 (Phase 6 partially complete)**
 
 ---
 
@@ -228,9 +234,37 @@ Components (all unchanged — they only consume context via useP2P())
 |--------|--------|----------------|
 | `App.jsx` lines | ~800 | ~80–100 |
 | Duplication (`generateNewId`) | ~100 lines duplicated | Eliminated via shared hook reset logic |
-| Dead state variables | 3 (`isSocket`, `downloadURL`, `signalState`) | 0 |
+| Dead state variables | 3 (`isSocket`, `downloadURL`, `signalState`) | ~~3~~ → **0** ✅ Removed 2025-07-23
 | Coupling between concerns | All mixed in one file | Cleanly separated into 4 hooks |
 | Testability | Impossible to unit test individual pieces | Each hook is independently testable |
 
 ---
-*Created: 2025-07-23 | Status: Awaiting Approval for Implementation*
+
+## 📝 Phase 6 Completion Log (2025-07-23)
+
+### Changes Applied
+| File | Lines Removed | What Was Deleted |
+|------|---------------|------------------|
+| `App.jsx` | ~31 lines | State declarations + all setter calls for `isSocket`, `downloadURL`, `signalState` in both initial useEffect and generateNewId() |
+| `Sender.jsx` | 2 props | Removed `isSocket` from destructured params and passed to SenderForm |
+| `Receiver.jsx` | 1 prop | Removed `downloadURL` from destructured params and passed to ReceiverForm |
+| `SenderForm.jsx` | 1 prop | Removed `isSocket` from destructured params (never consumed) |
+| `ReceiverForm.jsx` | 1 prop | Removed `downloadURL` from destructured params (never consumed) |
+
+### Bug Fix: Runtime Error on Receiver Connection
+**Issue:** After removing state declarations, two calls to `setSignalState(true)` remained inside `registerSocketHandlers()`:
+- Line ~366 in `incoming-call` handler (receiver side)
+- Line ~374 in `incoming-answer` handler (sender side)
+
+These caused `ReferenceError: setSignalState is not defined` when a receiver tried to connect.
+
+**Fix:** Removed both `setSignalState(true)` calls — they served no functional purpose as nothing consumed the state variable.
+
+### Verification
+- ✅ Zero references to `isSocket`, `downloadURL`, or `signalState` remain in entire codebase
+- ✅ All socket handlers only use `setSocketConnected` and `setSocketError`
+- ✅ No functionality changed — these variables were dead branches (set but never observed)
+
+---
+
+*Created: 2025-07-23 | Status: Phase 6 Partially Complete — Dead code removed, generateNewId() duplication remains for next phase*
