@@ -7,7 +7,7 @@ describe('useUIState Hook', () => {
   let mockPeerRef;
   let mockReconnect;
   let mockRtcConfig;
-  let mockRegisterSocketHandlers;
+
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,7 +32,7 @@ describe('useUIState Hook', () => {
       ],
     };
 
-    mockRegisterSocketHandlers = vi.fn();
+
   });
 
   describe('Initial Setup', () => {
@@ -41,8 +41,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       const returned = result.current;
@@ -99,8 +98,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       expect(result.current.connectionId).toBe('');
@@ -118,8 +116,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       expect(result.current.startTimeRef.current).toBeNull();
@@ -144,8 +141,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       expect(typeof result.current.generateNewId).toBe('function');
@@ -163,8 +159,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -179,8 +174,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -195,8 +189,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -211,8 +204,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -227,8 +219,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -243,8 +234,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -259,8 +249,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -275,8 +264,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -293,8 +281,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
@@ -320,8 +307,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       // Assign mock data channel to the hook's internal ref
@@ -335,7 +321,7 @@ describe('useUIState Hook', () => {
     });
 
     it('should handle errors when closing existing data channel', () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       
       const mockDataChannel = {
         current: {
@@ -351,17 +337,16 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       act(() => {
         result.current.connectTO('remote-peer-id');
       });
 
-      expect(consoleLogSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
       
-      consoleLogSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -377,8 +362,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         // Set some non-default values first
@@ -416,8 +400,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         // Set some non-default values first
@@ -465,8 +448,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         act(() => {
@@ -496,8 +478,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         act(() => {
@@ -527,8 +508,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         // Set up a mock data channel in the hook's internal ref
@@ -556,10 +536,8 @@ describe('useUIState Hook', () => {
       try {
         const { result } = renderHook(() => useUIState({
           socketRef: mockSocketRef,
-          peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         act(() => {
@@ -572,33 +550,7 @@ describe('useUIState Hook', () => {
       }
     });
 
-    it('should call registerSocketHandlers after recreating peer connection', () => {
-      class MockRTCPeerConnection {
-        constructor(config) {
-          this.config = config;
-        }
-      }
-      
-      vi.stubGlobal('RTCPeerConnection', MockRTCPeerConnection);
 
-      try {
-        const { result } = renderHook(() => useUIState({
-          socketRef: mockSocketRef,
-          peerRef: mockPeerRef,
-          reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
-        }));
-
-        act(() => {
-          result.current.generateNewId();
-        });
-
-        expect(mockRegisterSocketHandlers).toHaveBeenCalled();
-      } finally {
-        vi.unstubAllGlobals();
-      }
-    });
   });
 
   describe('dataChannelEvents Handler', () => {
@@ -607,8 +559,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       // Assign mock data channel to the hook's internal ref
@@ -630,8 +581,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -652,8 +602,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -674,8 +623,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -705,8 +653,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -740,8 +687,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -761,8 +707,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -790,8 +735,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel.current = {
@@ -835,8 +779,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       // Assign mock data channel to the hook's internal ref
@@ -866,8 +809,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel = mockDataChannel;
@@ -897,8 +839,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       result.current.dataChannel = mockDataChannel;
@@ -929,21 +870,17 @@ describe('useUIState Hook', () => {
       vi.stubGlobal('RTCPeerConnection', MockRTCPeerConnection);
       
       try {
-        mockPeerRef.current = null; // Ensure it's null
-
         const { result } = renderHook(() => useUIState({
           socketRef: mockSocketRef,
-          peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         act(() => {
           result.current.generateNewId();
         });
 
-        // Should not throw and should recreate peer connection
+        // Should not throw and should recreate peer connection internally
         expect(result.current.peerRef.current).toBeInstanceOf(MockRTCPeerConnection);
       } finally {
         vi.unstubAllGlobals();
@@ -965,8 +902,7 @@ describe('useUIState Hook', () => {
           socketRef: mockSocketRef,
           peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
         act(() => {
@@ -984,8 +920,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       const firstGenerateNewId = result.current.generateNewId;
@@ -1009,8 +944,7 @@ describe('useUIState Hook', () => {
         socketRef: mockSocketRef,
         peerRef: mockPeerRef,
         reconnect: mockReconnect,
-        rtcConfig: mockRtcConfig,
-        registerSocketHandlers: mockRegisterSocketHandlers,
+        rtcConfig: mockRtcConfig
       }));
 
       // Perform multiple rapid updates
@@ -1045,13 +979,11 @@ describe('useUIState Hook', () => {
       try {
         const { result } = renderHook(() => useUIState({
           socketRef: mockSocketRef,
-          peerRef: mockPeerRef,
           reconnect: mockReconnect,
-          rtcConfig: mockRtcConfig,
-          registerSocketHandlers: mockRegisterSocketHandlers,
+          rtcConfig: mockRtcConfig
         }));
 
-        // Call generateNewId multiple times
+        // Call generateNewId multiple times - should recreate internal peer each time
         act(() => {
           result.current.generateNewId();
           result.current.generateNewId();

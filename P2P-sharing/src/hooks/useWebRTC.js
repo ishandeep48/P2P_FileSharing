@@ -203,6 +203,35 @@ function useWebRTC({ socketRef = null, rtcConfig = {} }) {
     }
   }
 
+  /**
+   * Logs WebRTC connection details (STUN/TURN/P2P).
+   */
+  async function logConnectionType() {
+    if (!peerRef.current || peerRef.current.connectionState !== "connected") {
+      return;
+    }
+
+    try {
+      const stats = await peerRef.current.getStats();
+      const statsIterable = stats.values ? stats.values() : Object.values(stats);
+
+      for (const report of statsIterable) {
+        if (report.type === "candidate-pair" && report.selected) {
+          const localCandidate = report.localCandidateId
+            ? stats.get(report.localCandidateId)
+            : report.localCandidate;
+
+          if (!localCandidate) continue;
+
+          console.group("WebRTC Connection Details");
+          console.groupEnd();
+        }
+      }
+    } catch (error) {
+      console.error("Error checking connection type:", error);
+    }
+  }
+
   // ─── Exports ──────────────────────────────────────────────────────
   return {
     peerRef,
@@ -215,6 +244,7 @@ function useWebRTC({ socketRef = null, rtcConfig = {} }) {
     handleIncomingAnswer,
     handleIceCandidate,
     cleanup,
+    logConnectionType,
     onIceCandidateCallback,
     onDataChannelCallback,
     onConnectionStateChangeCallback,

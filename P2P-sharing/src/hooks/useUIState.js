@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 /**
  * useUIState - Manages all UI-related state variables and their handlers.
@@ -13,12 +13,12 @@ import { useState, useRef, useCallback } from "react";
  * @param {Object} deps - Dependencies for action handlers
  * @param {React.RefObject} deps.socketRef - Socket.io reference for emitting events
  * @param {React.RefObject} deps.dataChannel - Shared data channel ref from useWebRTC
+ * @param {React.RefObject} deps.peerRef - WebRTC peer connection ref from useWebRTC
  * @param {Function} deps.reconnect - Reconnection function from useSocketIO
  * @param {Object} deps.rtcConfig - WebRTC configuration object
- * @param {Function} deps.registerSocketHandlers - Handler registration function
  * @returns {Object} State variables and action handlers
  */
-function useUIState({ socketRef, dataChannel: sharedDataChannel, reconnect, rtcConfig, registerSocketHandlers }) {
+function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: externalPeerRef, reconnect, rtcConfig }) {
   // ─── Connection State ────────────────────────────────────────────────
   const [connectionId, setConnectionId] = useState("");
   const [dataChOpen, setDataChOpen] = useState(false);
@@ -40,7 +40,8 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, reconnect, rtcC
   const startTimeRef = useRef(null);
   const isMetaDataReceivedRef = useRef(false);
   const remoteSocketID = useRef(null);
-  const peerRef = useRef();
+  // Use external peerRef from useWebRTC if provided, otherwise create internal one
+  const peerRef = externalPeerRef || useRef();
   const pendingCandidates = useRef([]);
   const canSendData = useRef(false);
   const fileNameRef = useRef("received_file");
@@ -97,10 +98,11 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, reconnect, rtcC
     // Recreate socket (connection state handled by useSocketIO)
     reconnect();
     
-    // Recreate peer connection and re-register handlers
-    peerRef.current = new RTCPeerConnection(rtcConfig);
-    registerSocketHandlers();
-  }, [reconnect, rtcConfig, registerSocketHandlers]);
+    // Only recreate peer connection if not managed externally
+    if (!externalPeerRef && !peerRef.current) {
+      peerRef.current = new RTCPeerConnection(rtcConfig);
+    }
+  }, [reconnect, rtcConfig]);
 
   // ─── Connection Action Handlers ─────────────────────────────────────
   
@@ -168,6 +170,8 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, reconnect, rtcC
       }
     };
   }, []);
+
+  // ─── Internal Effects ───────────────────────────────────────────────
 
   // ─── Cleanup Effect ─────────────────────────────────────────────────
   
