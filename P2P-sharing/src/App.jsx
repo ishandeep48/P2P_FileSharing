@@ -11,6 +11,7 @@ import Receiver from "./pages/Receiver";
 import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
 import useSocketIO from "./hooks/useSocketIO";
+import useFileTransfer from "./hooks/useFileTransfer";
 
 function App() {
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
@@ -117,6 +118,22 @@ function App() {
       console.error("Error checking connection type:", error);
     }
   }, []);
+
+  // ─── File Transfer Hook ─────────────────────────────────────────────
+  const { uploadFile } = useFileTransfer({
+    dataChannel,
+    setTransferCompletion,
+    setSpeed,
+    byteSentRef,
+    lastSenderChunkTimeRef,
+    lastSenderBytesSentRef,
+    lastUpdateTimeRef,
+    lastUpdateTransferRef,
+    canSendData,
+    fileSizeRef,
+    logConnectionType,
+  });
+
   const dataChannelEvents = () => {
     dataChannel.current.onopen = () => {
       // console.log("opened data channel");
@@ -477,110 +494,7 @@ function App() {
     }
     socketRef.current.emit("connect-to-sender", { to: remotePeer });
   }, []);
-  // ----------------------------------------------------------------------------
-  const uploadFile = useCallback(async (file) => {
-    // console.log("test 2");
-    if (!dataChannel.current || dataChannel.current.readyState !== "open") {
-      console.error("Data Channel has not been initialised!!");
-      return;
-    }
-    // console.log("test 3");
-    // console.log(dataChannel.current.readyState);
-    const MAX_BUFFERED_AMOUNT = 15 * 1024 * 1024;
-    const CHUNK_SIZE = 256 * 1024;
-    const THROTTLE_DELAY = 5;
-    if (dataChannel.current.readyState == "open") {
-      // Reset all progress tracking for new file transfer
-      setTransferCompletion(0);
-      setSpeed(0);
-      byteSentRef.current = 0;
-      lastSenderChunkTimeRef.current = Date.now();
-      lastSenderBytesSentRef.current = 0;
-      lastUpdateTimeRef.current = 0;
-      lastUpdateTransferRef.current = 0;
 
-      const metadata = JSON.stringify({
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-      });
-      fileSizeRef.current = file.size;
-      dataChannel.current.send(metadata);
-      logConnectionType(); // Check connection type at start of transfer
-
-      // startTimeRef.current = Date.now();
-      lastSenderChunkTimeRef.current = Date.now();
-      lastSenderBytesSentRef.current = 0;
-      // console.log("sent metadata");
-      await new Promise((res) => {
-        const check = () => {
-          if (canSendData.current) {
-            res();
-          } else if (dataChannel.current.readyState) {
-            setTimeout(check, 100);
-          } else {
-            throw new Error("Data closed while Waiting");
-          }
-        };
-        check();
-      });
-      const stream = file.stream();
-      const reader = stream.getReader();
-      // let senderBytesSent = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          // console.log("sending EOF. the real success");
-          setTransferCompletion(100);
-          dataChannel.current.send("__EOF__");
-          break;
-        }
-        for (let i = 0; i < value.length; i += CHUNK_SIZE) {
-          const chunk = value.slice(i, i + CHUNK_SIZE);
-          while (
-            dataChannel.current.readyState === "open" &&
-            dataChannel.current.bufferedAmount > MAX_BUFFERED_AMOUNT
-          ) {
-            await new Promise((res) => setTimeout(res, THROTTLE_DELAY));
-          }
-          if (dataChannel.current.readyState !== "open") {
-            throw new Error("Data channel closed during transfer");
-          }
-          try {
-            dataChannel.current.send(chunk);
-            const now = Date.now();
-            const bytesSent = byteSentRef.current + chunk.byteLength;
-            const timeDelta =
-              (now - (lastSenderChunkTimeRef.current || now)) / 1000;
-            const bytesDelta =
-              bytesSent - (lastSenderBytesSentRef.current || 0);
-            if (timeDelta > 0) {
-              let instSpeed = (bytesDelta * 8) / (timeDelta * 1024 * 1024);
-              instSpeed = parseFloat(instSpeed).toFixed(2);
-              if (now - lastUpdateTimeRef.current >= 500) {
-                setSpeed(parseFloat(instSpeed));
-                lastUpdateTimeRef.current = now;
-              }
-            }
-            lastSenderChunkTimeRef.current = now;
-            lastSenderBytesSentRef.current = bytesSent;
-            byteSentRef.current += chunk.byteLength;
-            if (now - lastUpdateTransferRef.current >= 100) {
-              setTransferCompletion(
-                parseFloat((byteSentRef.current / fileSizeRef.current) * 100)
-              );
-              lastUpdateTransferRef.current = now;
-            }
-          } catch (e) {
-            console.error("error sendinfg ", e);
-          }
-        }
-      }
-      // console.log("file sent successfully");
-    } else {
-      // console.log("data channel is closed atp (before sharing anything) ");
-    }
-  }, []);
   // ----------------------------------------------------------------------
   useEffect(() => {
     if (wantsClose) {
