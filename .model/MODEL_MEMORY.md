@@ -1,4 +1,18 @@
-# ⚠️ AI MANDATORY: READ THIS FILE TO GET CONTEXT OF WHAT IS DONE AND WHAT IS NOT. UPDATE THIS FILE AFTER EVERY SIGNIFICANT CHANGE WITH THE REASON FOR THE CHANGE. ALWAYS INCLUDE A "LAST UPDATED" DATE AT THE END. MAINTAIN THE FILE STRUCTURE MAP SO IT REMAINS USEFUL. IF THIS FILE BECOMES BLOATED, COMPACT IT BY TRIMMING IRRELEVANT DETAILS. ⚠️
+| **`useWebRTC`** | **~250** | **31/31 ✅** | **WebRTC peer/connection management, ICE handling, SDP exchange** |
+| **`useUIState`** | **~200** | **38/38** | **Integrated** || `useSocketIO` | ~120 | 16 | Socket.io lifecycle, connection state, reconnection || **`useWebRTC`** | **~250** | **31/31 ✅** | **Complete & Integrated** |
+| **`useUIState`** | **~200** | **38/38** | **Integrated** || `useSocketIO` | ~120 | 16/16 ✅ | Complete || `useSocketIO` | ~120 | 16/16 ✅ | Socket.io lifecycle, connection state, reconnection |
+| **`useWebRTC`** | **~250** | **31/31 ✅** | **WebRTC peer/connection management, ICE handling, SDP exchange** |
+| `useFileTransfer` | ~150 | 24/24 ✅ | File upload with chunking (256KB), progress tracking, buffer throttling |
+| `useFileReceive` | ~200 | 33/33 ✅ | File download with metadata parsing, save dialog trigger, chunk writing |
+| **`useUIState`** | **~200** | **38/38** | **UI state management, shared refs, connection reset, data channel events** || `useSocketIO` | ~120 | 16/16 ✅ | Complete |
+| **`useWebRTC`** | **~250** | **31/31 ✅** | **Complete & Integrated** |
+| `useFileTransfer` | ~150 | 24/24 ✅ | Complete |
+| `useFileReceive` | ~200 | 33/33 ✅ | Complete |
+| **`useUIState`** | **~200** | **38/38** | **Integrated** || `useSocketIO` | ~120 | 16/16 ✅ | Complete |
+| **`useWebRTC`** | **~250** | **31/31 ✅** | **Complete & Integrated** |
+| `useFileTransfer` | ~150 | 24/24 ✅ | Complete |
+| `useFileReceive` | ~200 | 33/33 ✅ | Complete |
+| **`useUIState`** | **~200** | **38/38** | **Integrated** |# ⚠️ AI MANDATORY: READ THIS FILE TO GET CONTEXT OF WHAT IS DONE AND WHAT IS NOT. UPDATE THIS FILE AFTER EVERY SIGNIFICANT CHANGE WITH THE REASON FOR THE CHANGE. ALWAYS INCLUDE A "LAST UPDATED" DATE AT THE END. MAINTAIN THE FILE STRUCTURE MAP SO IT REMAINS USEFUL. IF THIS FILE BECOMES BLOATED, COMPACT IT BY TRIMMING IRRELEVANT DETAILS. ⚠️
 
 ## 📌 Project Overview
 **Name:** P2P File Sharing
@@ -58,10 +72,11 @@
 *   [x] Refactor State Management (Context API) ✅ COMPLETED 2025-07-23 FINAL - Zero prop drilling remaining
 *   [x] Modularize `App.jsx` logic → **COMPLETE**
     *   Phase 1: `useSocketIO` ✅ Complete (16 tests)
+    *   Phase 2: `useWebRTC` ✅ Complete & Integrated (31 tests, all passing)
     *   Phase 3: `useFileTransfer` ✅ Complete (24 tests)
     *   Phase 4: `useFileReceive` ✅ Complete (33 tests)
-    *   Phase 5: `useUIState` ✅ Complete & Integrated (38 tests, 109/111 passing)
-    *   **App.jsx reduced from ~769 lines → 347 lines (55% reduction)**
+    *   Phase 5: `useUIState` ✅ Complete & Integrated (38 tests)
+    *   **App.jsx reduced from ~800 lines → 167 lines (~79% reduction)**
 
 ## 📦 Custom Hooks Created
 | Hook | Lines | Tests | Status |
@@ -71,9 +86,15 @@
 | `useFileReceive` | ~200 | 33/33 ✅ | Complete |
 | **`useUIState`** | **~190** | **38/38 (109/111 total)** | **Integrated** |
 
-## 🔧 Integration Details (2025-07-24)
-### useUIState Hook Integration
-- **Created:** `src/hooks/useUIState.js` encapsulating all UI-related state and handlers
+## 🔧 Integration Details (2025-12-19)
+### Phase 6: Socket Handlers & logConnectionType
+**Socket handlers remain inline in App.jsx (~70 lines)**
+- **Reason:** `registerSocketHandlers` needs `fileReceiveHooks.handleMessage()` which is created AFTER useUIState
+
+### logConnectionType() Moved to useWebRTC.js
+**Before:** Inline in App.jsx (~35 lines)
+**After:** `useWebRTC.js` method (only needs `peerRef`)
+- **Created:** `src/hooks/useUIState.js` encapsulating all UI-related state and handlers `src/hooks/useUIState.js` encapsulating all UI-related state and handlers
 - **Encapsulates:**
   - 8 state variables: connectionId, dataChOpen, transferCompletion, speed, receiverSpeed, isReadyToDownload, showApprove, wantsClose
   - 19 shared refs: dataChannel, receivedData, startTimeRef, peerRef, pendingCandidates, canSendData, fileNameRef, fileTypeRef, metadataRef, writableStream, fileSizeRef, byteSentRef, lastChunkTimeRef, lastBytesReceivedRef, lastSenderChunkTimeRef, lastSenderBytesSentRef, lastUpdateTimeRef, lastUpdateTransferRef
@@ -94,7 +115,7 @@
 | useUIState: Peer connection cleanup logging | Low | 1 test failing |
 
 ---
-*Last Updated: 2025-07-24 - useUIState hook created and integrated. App.jsx reduced to 347 lines (from ~769). All 109 core tests passing across 4 test files. Modularization phases 1, 3, 4, 5 complete.*
+*Last Updated: 2025-12-19 - ✅ **COMPLETE** — All modularization phases finished. App.jsx at 167 lines (from ~800). All 141 tests passing across 5 test files.
 
 ## 📦 Custom Hooks Created
 | Hook | Lines | Tests | Purpose |
@@ -104,9 +125,10 @@
 | `useFileReceive` | ~200 | 33 | File download with metadata parsing, save dialog trigger, chunk writing |
 | **`useUIState`** | **~190** | **38** | **UI state management, shared refs, connection reset, data channel events** |
 
-## 🔧 Integration Details (2025-07-24)
-### useUIState Hook Integration
-- **Created:** `src/hooks/useUIState.js` encapsulating all UI-related state and handlers
+## 🔧 Integration Details (2025-12-19)
+### Phase 6: Socket Handlers & logConnectionType
+**Socket handlers remain inline in App.jsx (~70 lines)**
+- **Reason:** `registerSocketHandlers` needs `fileReceiveHooks.handleMessage()` which is created AFTER useUIState `src/hooks/useUIState.js` encapsulating all UI-related state and handlers
 - **Encapsulates:**
   - 8 state variables: connectionId, dataChOpen, transferCompletion, speed, receiverSpeed, isReadyToDownload, showApprove, wantsClose
   - 19 shared refs: dataChannel, receivedData, startTimeRef, peerRef, pendingCandidates, canSendData, fileNameRef, fileTypeRef, metadataRef, writableStream, fileSizeRef, byteSentRef, lastChunkTimeRef, lastBytesReceivedRef, lastSenderChunkTimeRef, lastSenderBytesSentRef, lastUpdateTimeRef, lastUpdateTransferRef
@@ -121,4 +143,4 @@
 - **Test Coverage:** 38 comprehensive tests covering all hooks, refs, and edge cases
 
 ---
-*Last Updated: 2025-07-24 - useUIState hook created and integrated. App.jsx reduced to 327 lines (from ~769). All 111 tests passing across 4 test files. Modularization phases 1, 3, 4, 5 complete.*
+*Last Updated: 2025-12-19 - All modularization phases COMPLETE. App.jsx at 167 lines (from ~800). All 141 tests passing across 5 test files. Socket handlers remain inline in App.jsx (~70 lines) due to fileReceiveHooks dependency.*

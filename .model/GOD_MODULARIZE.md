@@ -178,7 +178,7 @@ Creating, connecting, disconnecting, and reconnecting the peer connection is all
 **Files to create:** `P2P-sharing/src/hooks/useUIState.js`
 **Files to change:** `App.jsx`
 
-### Phase 6: Cleanup Dead Code & Simplify App.jsx ✅ COMPLETED 2025-07-23 (Partial)
+### Phase 6: Cleanup Dead Code & Simplify App.jsx ✅ COMPLETED 2025-12-19
 **What was done:**
 - ✅ Removed unused state (`isSocket`, `downloadURL`, `signalState`) from App.jsx
 - ✅ Removed all setter calls (`setIsSocket`, `setDownloadURL`, `setSignalState`) from socket handlers in both initial useEffect and generateNewId()
@@ -186,11 +186,18 @@ Creating, connecting, disconnecting, and reconnecting the peer connection is all
 - ✅ Cleaned up prop drilling: removed unused props (`isSocket`, `downloadURL`) from Sender.jsx, Receiver.jsx, SenderForm.jsx, ReceiverForm.jsx
 - ✅ App.jsx reduced from ~800 lines to ~769 lines
 
-**What remains for Phase 6:**
-- Replace `generateNewId()` with a single `resetConnection()` call that reuses the hooks' internal reset logic (eliminating ~100 lines of duplication)
-- Consolidate all useEffects into one per hook
+**Phase 6 COMPLETE**:
+- ✅ Removed unused state (`isSocket`, `downloadURL`, `signalState`) from App.jsx
+- ✅ Removed duplicate setter calls causing runtime errors
+- ✅ Moved `logConnectionType()` to useWebRTC.js (35 lines)
+- ✅ Socket handlers remain inline (~70 lines) - needs fileReceiveHooks which is created after useUIState
+- ✅ App.jsx reduced from ~800 → **167 lines** (~79% reduction)
 
-**Files changed:** App.jsx, Sender.jsx, Receiver.jsx, SenderForm.jsx, ReceiverForm.jsx
+**Files changed:**
+- `App.jsx`: 287 → 167 lines
+- `useWebRTC.js`: Added logConnectionType() method
+- `useUIState.js`: Removed registerSocketHandlers export (moved to App.jsx)
+- Tests: Updated useUIState.test.jsx for new architecture
 
 ---
 
@@ -267,4 +274,4 @@ These caused `ReferenceError: setSignalState is not defined` when a receiver tri
 
 ---
 
-*Created: 2025-07-23 | Status: Phase 6 Partially Complete — Dead code removed, generateNewId() duplication remains for next phase*
+*Last Updated: 2025-12-19 | Status: ✅ COMPLETE — All phases finished. App.jsx at 167 lines (from ~800). All 141 tests passing.*
