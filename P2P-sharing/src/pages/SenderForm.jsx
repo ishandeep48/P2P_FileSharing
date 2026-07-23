@@ -5,27 +5,22 @@ import ProgressBar from "../components/ProgressBar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Notification from "../components/Notification";
 import ServerWarning from "../components/ServerWarning";
-import { useP2P } from "../context/P2PContext";
 
-export default function SenderForm() {
-  const {
-    connectionId,
-    generateNewId,
-    isSocket,
-    uploadFile,
-    dataChOpen,
-    transferCompletion,
-    speed,
-    setWantsClose,
-    socketConnected,
-    socketError,
-    file,
-    setFile,
-    notification,
-    setNotification
-  } = useP2P();
-  // console.log("SenderForm Debug:", { socketConnected, socketError, dataChOpen, connectionId });
+export default function SenderForm({ 
+  connectionId, 
+  generateNewId, 
+  uploadFile, 
+  dataChOpen, 
+  transferCompletion, 
+  speed,
+  setWantsClose,
+  socketConnected,
+  socketError
+}) {
+  // console.log('SenderForm Debug:', { socketConnected, socketError, dataChOpen, connectionId });
+  const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [notification, setNotification] = useState(null);
   const conCardRef = useRef(null)
   const uploadRef = useRef()
   const progressRef = useRef()
@@ -78,17 +73,26 @@ let changed = false;
   return (
     <div className="min-h-screen py-16 px-4">
       {/* Server Warning */}
-      <ServerWarning />
+      <ServerWarning socketError={socketError} socketConnected={socketConnected} />
       
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Connection Card */}
         <div ref = {conCardRef}>
-        <ConnectionCard />
-        </div>
+        <ConnectionCard
+          connectionId={connectionId}
+          isConnected={dataChOpen}
+          onGenerateNewId={generateNewId}
+          socketConnected={socketConnected}
+          socketError={socketError}
+        /></div>
 
         {/* File Upload Section */}
         <div className="space-y-6" ref={uploadRef}>
-          <FileUpload />
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            selectedFile={file}
+            isConnected={dataChOpen}
+          />
 
           {/* Send Button */}
           {file && dataChOpen && (
@@ -133,12 +137,21 @@ let changed = false;
         {/* Progress Bar */}
         <div ref={progressRef}>
         {(transferCompletion > 0 || speed > 0) && (
-          <ProgressBar />
+          <ProgressBar
+            progress={transferCompletion}
+            speed={speed}
+            fileName={file?.name}
+            fileSize={file?.size}
+          />
         )}
         </div>
         {/* Notification */}
         {notification && (
-          <Notification />
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
         )}
       </div>
     </div>

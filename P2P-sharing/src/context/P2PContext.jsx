@@ -1,5 +1,8 @@
 import React, { createContext, useContext } from "react";
 
+// ─── Configuration Constants ──────────────────────────────────────────────
+export const PROGRESS_POLL_INTERVAL = 200; // ms - interval for speed/progress updates (configurable)
+
 const P2PContext = createContext(null);
 
 export function P2PProvider({ value, children }) {

@@ -1,19 +1,16 @@
 import React, { useEffect, useState ,useRef} from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import ProgressBar from '../components/ProgressBar';
-import { useP2P } from '../context/P2PContext';
 
-export default function ReceiverForm() {
-  const {
-    connectTO,
-    downloadURL,
-    dataChOpen,
-    showApprove,
-    setIsReadyToDownload,
-    transferCompletion,
-    receiverSpeed,
-    setWantsClose
-  } = useP2P();
+export default function ReceiverForm({
+  connectTO,
+  dataChOpen,
+  showApprove,
+  setIsReadyToDownload,
+  transferCompletion,
+  speed,
+  setWantsClose
+}) {
   const [count, setCount] = useState(0);
   const [conId, setConId] = useState('');
   const [sender, setSender] = useState();
@@ -157,8 +154,11 @@ export default function ReceiverForm() {
         )}
 
         {/* Progress Bar */}
-        {(transferCompletion > 0 || receiverSpeed > 0) && (
-          <ProgressBar />
+        {(transferCompletion > 0 || speed > 0) && (
+          <ProgressBar
+            progress={transferCompletion}
+            speed={speed}
+          />
         )}
       </div>
     </div>
