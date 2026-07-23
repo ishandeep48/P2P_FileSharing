@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test": "cd P2P-sharing && npm run test",
+    "test:watch": "cd P2P-sharing && npm run test:watch"
+  },
   "dependencies": {
     "@yudiel/react-qr-scanner": "^2.3.1",
     "qrcode.react": "^4.2.0",
