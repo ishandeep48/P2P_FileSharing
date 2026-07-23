@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Home from "./pages/Home";
 import Sender from "./pages/Sender";
 import Receiver from "./pages/Receiver";
 import ParticleBackground from "./components/ParticleBackground";
 import "./App.css";
+import { P2PProvider } from "./context/P2PContext";
 import useSocketIO from "./hooks/useSocketIO";
 import useWebRTC from "./hooks/useWebRTC";
 import useFileTransfer from "./hooks/useFileTransfer";
@@ -12,6 +13,9 @@ import useFileReceive from "./hooks/useFileReceive";
 import useUIState from "./hooks/useUIState";
 
 function App() {
+  const [file, setFile] = useState(null);
+  const [notification, setNotification] = useState(null);
+  
   const socketServerIP = import.meta.env.VITE_SOCKET_SERVER;
   const { socketRef, connected: socketConnected, error: socketError, reconnect } = useSocketIO(socketServerIP);
   
@@ -142,24 +146,39 @@ function App() {
     return () => webRTCCleanup();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── P2P Context Value ──────────────────────────────────────────────
+  const p2pValue = {
+    connectionId,
+    generateNewId,
+    uploadFile,
+    dataChOpen,
+    transferCompletion,
+    speed,
+    receiverSpeed,
+    setWantsClose,
+    socketConnected,
+    socketError,
+    connectTO,
+    showApprove,
+    setIsReadyToDownload,
+    file,
+    setFile,
+    notification,
+    setNotification,
+  };
+
   // ─── Render ───────────────────────────────────────────────────────
   return (
     <Router>
       <ParticleBackground />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/sender" element={
-          <Sender connectionId={connectionId} generateNewId={generateNewId} uploadFile={uploadFile}
-            dataChOpen={dataChOpen} transferCompletion={transferCompletion} speed={speed}
-            setWantsClose={setWantsClose} socketConnected={socketConnected} socketError={socketError} />
-        }/>
-        <Route path="/receiver" element={
-          <Receiver connectTO={connectTO} dataChOpen={dataChOpen} showApprove={showApprove}
-            setIsReadyToDownload={setIsReadyToDownload} transferCompletion={transferCompletion}
-            speed={receiverSpeed} setWantsClose={setWantsClose} />
-        }/>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <P2PProvider value={p2pValue}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/sender" element={<Sender />} />
+          <Route path="/receiver" element={<Receiver />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </P2PProvider>
     </Router>
   );
 }
