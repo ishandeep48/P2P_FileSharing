@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { PROGRESS_POLL_INTERVAL } from "../context/P2PContext";
 
 /**
@@ -22,6 +22,7 @@ import { PROGRESS_POLL_INTERVAL } from "../context/P2PContext";
  * @param {React.RefObject} config.isMetaDataReceivedRef - Ref tracking if metadata has been processed
  * @param {Function} config.setTransferCompletion - State setter for download progress (0-100)
  * @param {Function} config.setReceiverSpeed - State setter for current receive speed (MB/s)
+ * @param {Function} config.setAverageSpeed - State setter for average transfer speed after completion
  * @param {Function} config.setShowApprove - State setter to show approval dialog
  * @param {Function} config.setIsReadyToDownload - State setter to trigger save file picker
  * @param {React.RefObject} config.byteSentRef - Ref tracking total bytes received (used for progress calc)
@@ -45,6 +46,7 @@ function useFileReceive(config) {
     isMetaDataReceivedRef,
     setTransferCompletion,
     setReceiverSpeed,
+    setAverageSpeed,
     setShowApprove,
     setIsReadyToDownload,
     byteSentRef,
@@ -53,6 +55,9 @@ function useFileReceive(config) {
     lastUpdateTimeRef,
     lastUpdateTransferRef,
   } = config;
+
+  // ─── Separate ref for tracking when transfer started (for average speed calc) ──
+  const transferStartTimeRef = useRef(Date.now());
 
   /**
    * Handles incoming data channel messages for file receiving.
@@ -82,6 +87,8 @@ function useFileReceive(config) {
             setTransferCompletion(0);
             setReceiverSpeed(0);
             byteSentRef.current = 0;
+            // Set transfer start time for average speed calculation
+            transferStartTimeRef.current = Date.now();
             lastChunkTimeRef.current = Date.now();
             lastBytesReceivedRef.current = 0;
             lastUpdateTimeRef.current = 0;
@@ -102,6 +109,18 @@ function useFileReceive(config) {
         }
 
         setTransferCompletion(100);
+        
+        // Calculate average transfer speed
+        const totalBytes = byteSentRef.current;
+        const startTime = transferStartTimeRef.current; // When metadata received (transfer start)
+        const endTime = Date.now();
+        const elapsedSeconds = (endTime - startTime) / 1000;
+        
+        if (elapsedSeconds > 0 && totalBytes > 0) {
+          // Average speed in Mbps: (bytes * 8 bits) / (seconds * 1024 * 1024)
+          const avgSpeedMbps = parseFloat(((totalBytes * 8) / (elapsedSeconds * 1024 * 1024)).toFixed(2));
+          setAverageSpeed(avgSpeedMbps);
+        }
         
         // Send ACK back to sender
         dataChannel.current.send("__EOF_ACK__");
@@ -143,6 +162,7 @@ function useFileReceive(config) {
             }
           }
 
+          // Update last chunk time for instantaneous speed calculation only
           lastChunkTimeRef.current = now;
 
           // ─── Progress Update (throttled to configurable interval) ─────
@@ -166,6 +186,7 @@ function useFileReceive(config) {
       fileSizeRef,
       setTransferCompletion,
       setReceiverSpeed,
+      setAverageSpeed,
       setShowApprove,
       setIsReadyToDownload,
       byteSentRef,
@@ -173,6 +194,7 @@ function useFileReceive(config) {
       lastBytesReceivedRef,
       lastUpdateTimeRef,
       writableStream,
+      transferStartTimeRef,
     ]
   );
 

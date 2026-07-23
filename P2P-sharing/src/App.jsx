@@ -64,11 +64,11 @@ function App() {
     startTimeRef, isMetaDataReceivedRef, canSendData,
     fileNameRef, fileTypeRef, metadataRef, writableStream, fileSizeRef,
     byteSentRef, lastChunkTimeRef, lastBytesReceivedRef,
-    lastSenderChunkTimeRef, lastSenderBytesSentRef,
+    lastSenderChunkTimeRef, lastSenderBytesSentRef,averageSpeed,
     lastUpdateTimeRef, lastUpdateTransferRef,
     generateNewId, connectTO, dataChannelEvents, senderDataChannelEvents,
     handleWantsCloseCleanup, setConnectionId, setDataChOpen,
-    setTransferCompletion, setSpeed, setReceiverSpeed,
+    setTransferCompletion, setSpeed, setReceiverSpeed, setAverageSpeed,
     setIsReadyToDownload, setShowApprove, setWantsClose,
   } = useUIState({ 
     socketRef, dataChannel, peerRef, reconnect, rtcConfig,
@@ -115,8 +115,10 @@ function App() {
     dataChannel, writableStream, fileNameRef, fileTypeRef, fileSizeRef,
     metadataRef, isMetaDataReceivedRef, setTransferCompletion, setReceiverSpeed,
     setShowApprove, setIsReadyToDownload, byteSentRef, lastChunkTimeRef,
-    lastBytesReceivedRef, lastUpdateTimeRef, lastUpdateTransferRef,
+    lastBytesReceivedRef, lastUpdateTimeRef, lastUpdateTransferRef, setAverageSpeed,
   });
+
+
 
   // Update ref so handler always has current fileReceiveHooks
   useEffect(() => {
@@ -127,7 +129,8 @@ function App() {
   useEffect(() => {
     if (!isReadyToDownload) return;
     fileReceive.askForLocation();
-  }, [isReadyToDownload, fileReceive]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReadyToDownload]);
 
   useEffect(() => { handleWantsCloseCleanup(); }, [wantsClose, handleWantsCloseCleanup]);
 
@@ -145,6 +148,7 @@ function App() {
     transferCompletion,
     speed,
     receiverSpeed,
+    averageSpeed,
     setWantsClose,
     socketConnected,
     socketError,

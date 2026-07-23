@@ -2,8 +2,9 @@ import React from 'react';
 import { useP2P } from '../context/P2PContext';
 
 const ProgressBar = () => {
-  const { transferCompletion: progress, speed, receiverSpeed, file } = useP2P();
-  const effectiveSpeed = receiverSpeed > 0 ? receiverSpeed : speed;
+  const { transferCompletion: progress, speed, receiverSpeed, averageSpeed, file } = useP2P();
+  // During transfer: show instantaneous speed. After completion: show average speed.
+  const effectiveSpeed = progress >= 100 && averageSpeed > 0 ? averageSpeed : (receiverSpeed > 0 ? receiverSpeed : speed);
   // Ensure progress is a number and handle edge cases
   const safeProgress = typeof progress === 'number' ? progress : 0;
   const safeSpeed = typeof effectiveSpeed === 'number' ? effectiveSpeed : 0;
@@ -49,7 +50,7 @@ const ProgressBar = () => {
       
       <div className="flex justify-between items-center">
         <div className="text-white/80 text-sm">
-          Speed: {formatSpeed(safeSpeed)}
+          {safeProgress >= 100 ? 'Avg' : 'Speed'}: {formatSpeed(safeSpeed)}
         </div>
         <div className="flex space-x-2">
           {safeProgress > 0 && safeProgress < 100 && (

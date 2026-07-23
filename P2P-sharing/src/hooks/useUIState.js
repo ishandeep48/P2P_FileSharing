@@ -28,6 +28,7 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: extern
   const [transferCompletion, setTransferCompletion] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [receiverSpeed, setReceiverSpeed] = useState(0);
+  const [averageSpeed, setAverageSpeed] = useState(0);
 
   // ─── UI Control State ───────────────────────────────────────────────
   const [isReadyToDownload, setIsReadyToDownload] = useState(false);
@@ -205,6 +206,7 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: extern
     transferCompletion,
     speed,
     receiverSpeed,
+    averageSpeed,
     isReadyToDownload,
     showApprove,
     wantsClose,
@@ -245,6 +247,7 @@ function useUIState({ socketRef, dataChannel: sharedDataChannel, peerRef: extern
     setTransferCompletion,
     setSpeed,
     setReceiverSpeed,
+    setAverageSpeed,
     setIsReadyToDownload,
     setShowApprove,
   };
