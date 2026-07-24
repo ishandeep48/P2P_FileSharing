@@ -83,6 +83,13 @@ function useSocketHandlers({
         setTimeout(() => {
           if (!channel) return;
           
+          // Check if channel is already open (timing issue)
+          if (channel.readyState === "open") {
+            setDataChOpen(true);
+            lastChunkTimeRef.current = Date.now();
+            lastBytesReceivedRef.current = 0;
+          }
+          
           channel.onopen = () => {
             setDataChOpen(true);
             lastChunkTimeRef.current = Date.now();
@@ -114,6 +121,10 @@ function useSocketHandlers({
       await sendCall(who);
       setTimeout(() => {
         if (dataChannel.current) {
+          // Check if channel is already open before attaching handlers
+          if (dataChannel.current.readyState === "open") {
+            setDataChOpen(true);
+          }
           dataChannelEvents();
           senderDataChannelEvents();
         }
